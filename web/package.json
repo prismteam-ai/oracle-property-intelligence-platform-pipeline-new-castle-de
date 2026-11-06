@@ -1,0 +1,18 @@
+{
+  "name": "newcastle-county-web",
+  "private": true,
+  "type": "module",
+  "description": "Static pages and the Ask function for New Castle County property leads.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test ask.test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.0",
+    "ai": "^5.0.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.0",
+    "typescript": "^5.6.0"
+  }
+}

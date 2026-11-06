@@ -2,7 +2,7 @@
 
 Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
 
-The page loads the published lead set. Manifest CID `bafybeiapogy36guzgizt2teewa6ywddgtucu3vbdavpog4xum7qyg7rfom`. A later publish is `bafybeihf3sayrfzaebakgcw3wn3gckkl6fi4o3hr6asyh5sj7yrqjh3zmi`. The first CID is unchanged. The matching digest fetch is on `ipfs.filebase.io`. `ipfs.io` and `dweb.link` returned a Cloudflare challenge from this network. A rooftop HVAC unit or a plumbing permit is not counted as a roof permit. A year-built age is the building year, not a measured roof replacement.
+The page loads the published lead set. Manifest CID `bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm`. It follows prior manifest `bafybeifhtayafewigymvuulndj72zxv2rqe6kuuvrsiu2kblnsb75v3nwa`. This run's summary matched on `ipfs.filebase.io`. The manifest matched on `ipfs.filebase.io` and `4everland.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429. A rooftop HVAC unit or a plumbing permit is not counted as a roof permit. A year-built age is the building year, not a measured roof replacement. Last roof contractor is the name printed on the latest closed or new-construction roof permit. The open-permit layer has no contractor field.
 
 ## Context
 
@@ -119,6 +119,18 @@ The pipeline must demonstrate that data is ingested on an ongoing basis (not a o
 ## Out of Scope
 - Roofing CRM UI, map pin/GPS interaction design, and lead outreach workflows (covered in [roofing-crm](https://github.com/prismteam-ai/roofing-crm)).
 - Live outbound messaging to property owners.
+
+## Rebuild
+
+Permit layers are read by the kit `arcgis-feature-service` adapter through `counties/new-castle/permit-profile.mjs`. From the kit runtime:
+
+```bash
+node bin/elephant-county.mjs permit-probe --county new-castle
+```
+
+`pipeline/query_layer.py` installs views on the existing DuckDB file. `pipeline/mcp_server.py` reads those views. That server is the internal query path. `@elephant-xyz/mcp` is the public path after an Atlas lexicon archive exists. GitHub `elephant-cli` main reports 1.58.1 and includes `export-tables`. `validate` finds no files until a New Castle lexicon property group exists, so that command was not used to publish the query JSON.
+
+`pipeline/publish_ipfs.py` packs the query JSON with `ipfs-car@3` and uploads it to Filebase. Delaware contractor licenses are the SODA pulls in `data/soda/`. BBB was not submitted because `www.bbb.org/robots.txt` disallows category pages.
 
 ## Reference
 - [Roofing CRM & Lead Identification UI](https://github.com/prismteam-ai/roofing-crm)

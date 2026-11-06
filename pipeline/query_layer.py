@@ -17,10 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "data" / "duckdb" / "newcastle.duckdb"
 
 LIMITATIONS = [
-    "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest permit whose type or comment mentions roof. Parcels with neither have no roof age.",
+    "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest roof-work permit: a replacement, re-roof, repair, tear-off, shingle, or sheathing job in the permit description. Porch roofs, patio covers, solar mounts, and later revision notes do not count. Parcels with neither have no roof age.",
     "Open duration is days since the issue timestamp on an open permit layer. The GIS layers do not publish a close date.",
-    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). It is not matched to a Delaware license or corporate registry.",
-    "BBB ratings are not loaded.",
+    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). Delaware contractor business licenses were read through SODA dataset 5zy2-grhr, and electrical, plumbing, and HVACR licenses through pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name. The open-permit layer has no contractor field, so open permits name a contractor only in the two rows where the county printed one. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
+    "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
     "Ownership unchanged for 10 years cannot be answered. Sale and deed history are on www3.newcastlede.gov/parcel/Details/. That host's robots.txt is Disallow: / except listed search pages, so the Details path is disallowed. The page also serves a bot challenge, which this pipeline does not bypass. The GIS layers have no sale date.",
     "gis.nccde.org publishes no robots.txt. Parcel, structure, address, unit, permit, appeal, and rollback layers were read from that host.",
 ]
@@ -36,50 +36,26 @@ CREATE OR REPLACE MACRO miles_between(lat1, lon1, lat2, lon2) AS (
   END
 );
 
-CREATE OR REPLACE VIEW lead_property AS
-SELECT
-  prclid,
-  prclkey,
-  parcel_url,
-  address,
-  city,
-  state,
-  zip,
-  lon,
-  lat,
-  owner_name,
-  owner_address,
-  owner_city,
-  owner_state,
-  owner_zip,
-  owner_out_of_area,
-  property_class,
-  subdivision,
-  year_built,
-  remodel_year,
-  roof_type,
-  roof_material,
-  roof_year,
-  roof_age_years,
-  roof_age_basis,
-  open_permit_count,
-  open_roof_permit_count,
-  total_permit_count,
-  roof_permit_count,
-  oldest_open_permit_issued_at,
-  oldest_open_roof_permit_issued_at,
-  latest_roof_permit_issued_at,
-  date_diff('day', oldest_open_roof_permit_issued_at, current_timestamp) AS oldest_open_roof_days,
-  contractor_name,
-  'name printed on the permit; not reconciled to a state license' AS contractor_basis,
-  CAST(NULL AS VARCHAR) AS bbb_rating,
-  'not loaded' AS bbb_basis,
-  CAST(NULL AS BOOLEAN) AS ownership_unchanged_10_years,
-  'sale history is not in the GIS layers; parcel Details is disallowed by robots.txt' AS ownership_basis,
-  source_edited_at,
-  assembled_at,
-  run_id
-FROM parcel;
+CREATE OR REPLACE MACRO permit_scope(comments) AS (
+  trim(regexp_replace(
+    regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g'),
+    '\\(?\\s*-?\\s*REV(ISION|ISED)?\\b.*$', ''))
+);
+
+CREATE OR REPLACE MACRO roof_work(comments, aptype) AS (
+  CASE
+    WHEN upper(coalesce(aptype, '')) IN ('HVAC', 'PLUMBING') THEN
+      regexp_matches(permit_scope(comments), '\\bRE-?ROOF|\\bROOFING\\b|SHINGLE|SHEATHING|ROOF (REPLAC|REPAIR|RELAC)')
+    WHEN regexp_matches(permit_scope(comments),
+      '\\bRE-?ROOF|\\bROOF(ING)? *(REPLAC|RELAC|REPAIR|REPLMT)|\\bROOF[^.;]{0,20}REPAIR|(REPLACE|REMOVE|TEAR OFF)[^.;]{0,40}\\bROOF|\\bNEW ROOF\\b|SHINGLE|\\bROOFING (JOB|MATERIAL)|ROOF SHEATHING|\\bROOFING\\b')
+      THEN true
+    WHEN regexp_matches(permit_scope(comments),
+      'PORCH ROOF|ROOF OVER|ROOF COVER|ROOFED|ROOF DECK|PORTICO|OVERHANG|MOUNTED|MAOUNTED|STAIRS TO ROOF|EXTEND ROOFING')
+      THEN false
+    ELSE regexp_matches(permit_scope(comments),
+      '(INSTALL[A-Z]*|REMOVAL|REFRAME|REBUILD)[^.;]{0,40}\\bROOF|^ROOF\\b|[0-9][0-9,]* SF (SHINGLE )?ROOF')
+  END
+);
 
 CREATE OR REPLACE VIEW permit_detail AS
 SELECT
@@ -92,7 +68,7 @@ SELECT
   comments,
   contractor_name,
   permit_status,
-  is_roof,
+  roof_work(comments, aptype) AS is_roof,
   CASE
     WHEN permit_status = 'open' THEN date_diff('day', issued_at, current_timestamp)
   END AS days_open,
@@ -120,17 +96,6 @@ FROM (
       WHEN source = 'permits_adu' THEN 'adu'
       ELSE source
     END AS permit_status,
-    (
-      (
-        regexp_replace(upper(coalesce(json_extract_string(attrs, '$.COMMENTS'), '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
-        OR regexp_replace(upper(coalesce(json_extract_string(attrs, '$.APTYPE'), '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
-      )
-      AND (
-        upper(coalesce(json_extract_string(attrs, '$.APTYPE'), '')) NOT IN ('HVAC', 'PLUMBING')
-        OR regexp_replace(upper(coalesce(json_extract_string(attrs, '$.COMMENTS'), '')), 'ROOF[ -]?TOP', ' ', 'g')
-           SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
-      )
-    ) AS is_roof,
     fetched_at,
     row_number() OVER (
       PARTITION BY prclid, coalesce(json_extract_string(attrs, '$.APNO'), source || ':' || object_id::VARCHAR)
@@ -140,6 +105,70 @@ FROM (
   WHERE source LIKE 'permits_%' AND prclid IS NOT NULL
 ) AS p
 WHERE p.dup_rank = 1;
+
+CREATE OR REPLACE VIEW roof_rollup AS
+SELECT
+  prclid,
+  count(*) FILTER (WHERE permit_status = 'open' AND is_roof) AS open_roof_permit_count,
+  count(*) FILTER (WHERE is_roof) AS roof_permit_count,
+  min(issued_at) FILTER (WHERE permit_status = 'open' AND is_roof) AS oldest_open_roof_permit_issued_at,
+  max(issued_at) FILTER (WHERE is_roof) AS latest_roof_permit_issued_at,
+  arg_max(contractor_name, issued_at) FILTER (WHERE is_roof AND contractor_name IS NOT NULL) AS last_roof_contractor_name,
+  max(issued_at) FILTER (WHERE is_roof AND contractor_name IS NOT NULL) AS last_roof_contractor_issued_at
+FROM permit_detail
+GROUP BY prclid;
+
+CREATE OR REPLACE VIEW lead_property AS
+SELECT
+  b.prclid,
+  b.prclkey,
+  b.parcel_url,
+  b.address,
+  b.city,
+  b.state,
+  b.zip,
+  b.lon,
+  b.lat,
+  b.owner_name,
+  b.owner_address,
+  b.owner_city,
+  b.owner_state,
+  b.owner_zip,
+  b.owner_out_of_area,
+  b.property_class,
+  b.subdivision,
+  b.year_built,
+  b.remodel_year,
+  b.roof_type,
+  b.roof_material,
+  coalesce(b.year_built, year(r.latest_roof_permit_issued_at)) AS roof_year,
+  year(current_date) - coalesce(b.year_built, year(r.latest_roof_permit_issued_at)) AS roof_age_years,
+  CASE
+    WHEN b.year_built IS NOT NULL THEN 'structure.year_built'
+    WHEN r.latest_roof_permit_issued_at IS NOT NULL THEN 'latest_roof_permit'
+  END AS roof_age_basis,
+  b.open_permit_count,
+  coalesce(r.open_roof_permit_count, 0) AS open_roof_permit_count,
+  b.total_permit_count,
+  coalesce(r.roof_permit_count, 0) AS roof_permit_count,
+  b.oldest_open_permit_issued_at,
+  r.oldest_open_roof_permit_issued_at,
+  r.latest_roof_permit_issued_at,
+  date_diff('day', r.oldest_open_roof_permit_issued_at, current_timestamp) AS oldest_open_roof_days,
+  b.contractor_name,
+  'name printed on the permit; not reconciled to a state license' AS contractor_basis,
+  r.last_roof_contractor_name,
+  r.last_roof_contractor_issued_at,
+  'name printed on a closed or new-construction roof permit; not an open-permit contractor' AS last_roof_contractor_basis,
+  CAST(NULL AS VARCHAR) AS bbb_rating,
+  'not loaded' AS bbb_basis,
+  CAST(NULL AS BOOLEAN) AS ownership_unchanged_10_years,
+  'sale history is not in the GIS layers; parcel Details is disallowed by robots.txt' AS ownership_basis,
+  b.source_edited_at,
+  b.assembled_at,
+  b.run_id
+FROM parcel AS b
+LEFT JOIN roof_rollup AS r USING (prclid);
 """
 
 
@@ -183,7 +212,8 @@ def source_summary() -> dict:
               count(*) FILTER (WHERE open_permit_count > 0) AS any_open_permit,
               count(*) FILTER (WHERE open_roof_permit_count > 0) AS open_roof_permit,
               count(*) FILTER (WHERE owner_out_of_area) AS out_of_area_owner,
-              count(*) FILTER (WHERE contractor_name IS NOT NULL) AS with_contractor_name
+              count(*) FILTER (WHERE contractor_name IS NOT NULL) AS with_any_permit_contractor,
+              count(*) FILTER (WHERE last_roof_contractor_name IS NOT NULL) AS with_last_roof_contractor
             FROM lead_property
             """
         )
@@ -203,11 +233,18 @@ def source_summary() -> dict:
         )
     )
     connection.close()
+    row = coverage[0] if coverage else {}
+    row["contractor_count_note"] = (
+        "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. "
+        "with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, "
+        "from the closed and new-construction layers. The open-permit layer has no contractor field, "
+        "so neither count is an open-permit contractor."
+    )
     return {
         "county": "New Castle County, DE",
         "database": "duckdb",
         "query_views": ["lead_property", "permit_detail"],
-        "coverage": coverage[0] if coverage else {},
+        "coverage": row,
         "sources": sources,
         "runs": runs,
         "limitations": LIMITATIONS,
@@ -404,10 +441,47 @@ def query_select(sql: str, limit: int = 100) -> dict:
     return {"returned": len(rows), "limit": limit, "rows": rows, "limitations": LIMITATIONS}
 
 
+def export(directory: Path) -> dict:
+    """Write the hosted search set: roofs 15+ or an open roof permit, plus open roof permits."""
+    directory.mkdir(parents=True, exist_ok=True)
+    summary = source_summary()["coverage"]
+    connection = connect(read_only=True)
+    leads = _rows(
+        connection.execute(
+            """
+            SELECT prclid, address, city, zip, lon, lat, roof_age_years, roof_age_basis,
+                   year_built, roof_material, open_permit_count, open_roof_permit_count,
+                   oldest_open_roof_days, contractor_name, owner_out_of_area,
+                   last_roof_contractor_name, last_roof_contractor_issued_at
+            FROM lead_property
+            WHERE lat IS NOT NULL AND (roof_age_years >= 15 OR open_roof_permit_count > 0)
+            ORDER BY prclid
+            """
+        )
+    )
+    permits = _rows(
+        connection.execute(
+            """
+            SELECT prclid, apno, aptype, issued_at, days_open, comments, contractor_name
+            FROM permit_detail
+            WHERE permit_status = 'open' AND is_roof
+            ORDER BY days_open DESC NULLS LAST, apno
+            """
+        )
+    )
+    connection.close()
+    for name, payload in (("summary.json", summary), ("leads.json", leads), ("permits.json", permits)):
+        indent = 2 if name == "summary.json" else None
+        (directory / name).write_text(json.dumps(payload, indent=indent, default=str) + "\n")
+    return {"leads": len(leads), "permits": len(permits), "summary": summary}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Query the New Castle County DuckDB")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("install")
+    exporter = sub.add_parser("export")
+    exporter.add_argument("--out", type=Path, default=ROOT / "web" / "data")
     sub.add_parser("summary")
     radius = sub.add_parser("radius")
     radius.add_argument("latitude", type=float)
@@ -429,7 +503,7 @@ def main() -> None:
 
     if args.command == "install":
         install()
-        print("installed lead_property, permit_detail, miles_between")
+        print("installed lead_property, permit_detail, roof_rollup, miles_between, roof_work")
         return
     install()
     if args.command == "summary":
@@ -451,6 +525,8 @@ def main() -> None:
             min_days_open=args.min_days,
             limit=args.limit,
         )
+    elif args.command == "export":
+        payload = export(args.out)
     elif args.command == "property":
         payload = property_record(args.prclid)
     else:

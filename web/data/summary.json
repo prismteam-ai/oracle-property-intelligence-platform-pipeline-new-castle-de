@@ -2,8 +2,11 @@
   "parcels": 203882,
   "with_coordinates": 203855,
   "with_year_built": 4432,
-  "roofs_15_or_older": 6043,
-  "open_roof_permit": 178,
+  "roofs_15_or_older": 4819,
+  "any_open_permit": 10735,
+  "open_roof_permit": 114,
   "out_of_area_owner": 10542,
-  "with_contractor_name": 113046
+  "with_any_permit_contractor": 113046,
+  "with_last_roof_contractor": 2444,
+  "contractor_count_note": "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor."
 }

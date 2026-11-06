@@ -4,47 +4,78 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>New Castle County Oracle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-  <header>
-    <div>
-      <p class="eyebrow">New Castle County, Delaware</p>
-      <h1>Property intelligence</h1>
-    </div>
-    <p id="status">Loading the published dataset.</p>
-  </header>
-  <nav>
-    <button type="button" data-panel="summary" class="active">Run</button>
-    <button type="button" data-panel="search">Radius</button>
-    <button type="button" data-panel="permits">Open roof permits</button>
-    <button type="button" data-panel="ask">Ask</button>
-  </nav>
-  <main>
-    <section id="summary"></section>
-    <section id="search" hidden>
-      <form id="search-form">
-        <label>Latitude <input id="lat" type="number" step="0.000001" value="39.739072"></label>
-        <label>Longitude <input id="lon" type="number" step="0.000001" value="-75.539787"></label>
-        <label>Radius miles <input id="miles" type="number" min="0.1" max="30" step="0.1" value="5"></label>
-        <label>Min roof age <input id="min-age" type="number" min="0" value="15"></label>
-        <label class="check"><input id="open-only" type="checkbox"> Open roof permits only</label>
-        <button type="submit">Search</button>
-      </form>
-      <div id="map"></div>
-      <p id="search-count"></p>
-      <div id="search-results"></div>
-    </section>
-    <section id="permits" hidden></section>
-    <section id="ask" hidden>
-      <form id="ask-form">
-        <textarea id="question" rows="3">Which properties within five miles of Wilmington have roofs older than 15 years?</textarea>
-        <button type="submit">Answer</button>
-      </form>
-      <div id="answer"></div>
-    </section>
-  </main>
+<body data-app="oracle">
+  <div class="apps">
+    <button type="button" class="apps-button" aria-label="Switch app" aria-expanded="false" aria-controls="apps-menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="15" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/><circle cx="15" cy="15" r="1.5"/></g></svg>
+    </button>
+    <nav id="apps-menu" class="apps-menu" hidden>
+      <a href="https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app" data-app="oracle">New Castle Oracle<small>Property pipeline</small></a>
+      <a href="https://roofing-crm-newcastle-adamkalamchi-3665s-projects.vercel.app" data-app="crm">Roofing leads<small>CRM</small></a>
+    </nav>
+  </div>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="spark" aria-hidden="true"></span>New Castle Oracle</div>
+      <button type="button" id="open-ask" class="search"><span class="spark" aria-hidden="true"></span><span>Ask the dataset</span><kbd>⌘K</kbd></button>
+      <nav class="views">
+        <p class="side-label">Views</p>
+        <button type="button" data-panel="summary" class="active">Pipeline run</button>
+        <button type="button" data-panel="search">Radius search</button>
+        <button type="button" data-panel="permits">Open roof permits</button>
+        <button type="button" data-panel="ask">Ask</button>
+      </nav>
+      <p id="status" class="status">Loading the published dataset…</p>
+    </aside>
+
+    <main class="main">
+      <header class="page-head">
+        <div>
+          <h1><span class="gradient">Property intelligence for New Castle County.</span></h1>
+          <p class="muted">Parcels, roof age, and open roof permits from county records, published on IPFS.</p>
+        </div>
+      </header>
+
+      <section id="summary" class="panel"></section>
+
+      <section id="search" class="panel" hidden>
+        <form id="search-form" class="filters">
+          <label class="filter"><span>Lat</span><input id="lat" type="number" step="0.000001" value="39.739072"></label>
+          <label class="filter"><span>Lon</span><input id="lon" type="number" step="0.000001" value="-75.539787"></label>
+          <label class="filter small"><span>Radius mi</span><input id="miles" type="number" min="0.1" max="30" step="0.1" value="5"></label>
+          <label class="filter small"><span>Roof age ≥</span><input id="min-age" type="number" min="0" value="15"></label>
+          <label class="filter"><span>Open roof permits only</span><input id="open-only" type="checkbox" style="width:auto"></label>
+          <button type="submit" class="btn primary">Apply</button>
+        </form>
+        <div id="map"></div>
+        <p id="search-count" class="muted"></p>
+        <div id="search-results" class="table-wrap"></div>
+      </section>
+
+      <section id="permits" class="panel table-wrap" hidden></section>
+
+      <section id="ask" class="panel ask" hidden>
+        <form id="ask-form" class="composer">
+          <textarea id="question" rows="1" placeholder="Ask about roofs, permits, or contractors near a town">Which properties within five miles of Wilmington have roofs older than 15 years?</textarea>
+          <button type="submit" class="send" aria-label="Ask">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M3 20.5v-17L22 12 3 20.5Zm2-3.1L16.9 12 5 6.6v4l6 1.4-6 1.4v4Z"/></svg>
+          </button>
+        </form>
+        <div class="chips">
+          <button type="button" class="chip" data-prompt="Which properties within 5 miles of Wilmington have roofs older than 15 years?">Old roofs near Wilmington</button>
+          <button type="button" class="chip" data-prompt="Which open roof permits near Wilmington name a contractor?">Contractors on open permits</button>
+          <button type="button" class="chip" data-prompt="Which roofs within 3 miles of Newark are 15 years or older?">Roofs around Newark</button>
+        </div>
+        <div id="answer"></div>
+      </section>
+    </main>
+  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="./app.js"></script>
 </body>

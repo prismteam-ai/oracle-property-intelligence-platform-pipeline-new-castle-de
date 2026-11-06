@@ -1,8 +1,14 @@
 """Publish the hosted query files to the Filebase IPFS bucket.
 
-Filebase returns a CIDv0. The manifest records the CIDv1 (base32) of the
-same bytes. A second tiny object is published afterward so the first CID
-stays immutable.
+Steps:
+1. Pack the data files into a CAR with the off-the-shelf `ipfs-car` tool.
+2. Upload the CAR and each file to Filebase over the S3 API (boto3).
+3. Write a manifest that links to the CAR and to the previous run's manifest.
+4. Check each object through public gateways. Gateways that refuse or challenge
+   are recorded as blocked, not counted as verification.
+
+Filebase returns a CIDv0 in the x-amz-meta-cid header. The manifest records the
+CIDv1 (base32) of the same bytes.
 """
 
 from __future__ import annotations
@@ -10,8 +16,10 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-import os
+import shutil
 import ssl
+import subprocess
+import tempfile
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,13 +31,17 @@ from cid import make_cid
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "web" / "data"
 KEY_PATH = Path.home() / ".config" / "prism" / "filebase.key"
+CAR_TOOL = "ipfs-car@3"
 GATEWAYS = (
     "https://ipfs.io/ipfs/",
     "https://dweb.link/ipfs/",
     "https://ipfs.filebase.io/ipfs/",
+    "https://gateway.pinata.cloud/ipfs/",
+    "https://4everland.io/ipfs/",
     "https://nftstorage.link/ipfs/",
     "https://w3s.link/ipfs/",
 )
+DATA_FILES = ("summary.json", "leads.json", "permits.json")
 
 
 def credentials() -> tuple[str, str, str]:
@@ -54,11 +66,23 @@ def cid_v1(cid_v0: str) -> str:
     return make_cid(cid_v0).to_v1().encode("base32").decode()
 
 
+def pack_car(source: Path, out: Path) -> str:
+    """Pack a directory into a CAR with ipfs-car. Returns the directory root CID."""
+    subprocess.run(
+        ["npx", "-y", "-p", CAR_TOOL, "ipfs-car", "pack", str(source), "--output", str(out)],
+        check=True,
+    )
+    roots = subprocess.run(
+        ["npx", "-y", "-p", CAR_TOOL, "ipfs-car", "roots", str(out)],
+        check=True, capture_output=True, text=True,
+    ).stdout.split()
+    return roots[-1]
+
+
 def upload(s3, bucket: str, key: str, body: bytes, content_type: str) -> dict:
     response = s3.put_object(Bucket=bucket, Key=key, Body=body, ContentType=content_type)
     headers = {k.lower(): v for k, v in response["ResponseMetadata"]["HTTPHeaders"].items()}
     version0 = headers["x-amz-meta-cid"]
-    digest = hashlib.sha256(body).hexdigest()
     return {
         "name": key.split("/", 1)[-1],
         "key": key,
@@ -66,7 +90,7 @@ def upload(s3, bucket: str, key: str, body: bytes, content_type: str) -> dict:
         "cid_v0": version0,
         "size": len(body),
         "codec": "file",
-        "sha256": digest,
+        "sha256": hashlib.sha256(body).hexdigest(),
         "content_type": content_type,
     }
 
@@ -87,15 +111,24 @@ def main() -> None:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     _access, _secret, bucket = credentials()
     s3 = client()
+    previous = json.loads((DATA / "published.json").read_text()) if (DATA / "published.json").exists() else None
+    prior_cids = [previous["manifest_cid"]] if previous else []
+
+    staging = Path(tempfile.mkdtemp(prefix="publish-")) / run_id
+    staging.mkdir(parents=True)
+    for name in DATA_FILES:
+        shutil.copy(DATA / name, staging / name)
+    car_path = staging.parent / f"{run_id}.car"
+    car_root = pack_car(staging, car_path)
+    car_body = car_path.read_bytes()
+    car_artifact = upload(s3, bucket, f"runs/{run_id}/publication.car", car_body, "application/vnd.ipld.car")
+    car_artifact["root_cid"] = car_root
+    print("car", car_artifact["cid"], "root", car_root, car_artifact["size"])
+
     artifacts = []
-    files = [
-        ("summary.json", "application/json"),
-        ("leads.json", "application/json"),
-        ("permits.json", "application/json"),
-    ]
-    for name, content_type in files:
+    for name in DATA_FILES:
         body = (DATA / name).read_bytes()
-        artifacts.append(upload(s3, bucket, f"runs/{run_id}/{name}", body, content_type))
+        artifacts.append(upload(s3, bucket, f"runs/{run_id}/{name}", body, "application/json"))
         print(name, artifacts[-1]["cid"], artifacts[-1]["size"])
 
     manifest = {
@@ -103,12 +136,13 @@ def main() -> None:
         "county": "New Castle County, DE",
         "bucket": bucket,
         "artifacts": artifacts,
-        "prior_cids": [],
+        "car": car_artifact,
+        "prior_cids": prior_cids,
         "limitations": [
             "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
             "Open duration is days since issue on an open permit layer. No close date is published.",
-            "Contractor name is the text on the permit, not a Delaware license match.",
-            "BBB ratings are not loaded.",
+            "Contractor name is the text on the permit. The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",
+            "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
             "Ownership unchanged for 10 years cannot be answered. Sale history is not in the GIS layers.",
         ],
     }
@@ -116,18 +150,19 @@ def main() -> None:
     manifest_artifact = upload(s3, bucket, f"runs/{run_id}/manifest.json", manifest_bytes, "application/json")
     print("manifest", manifest_artifact["cid"])
 
-    # A second object, published after the first manifest, so the first CID is unchanged.
+    # The delta object points at the manifest. It carries no new counts.
     delta = {
         "run_id": run_id + "-delta",
-        "note": "Second publish. The prior manifest CID is unchanged. The county pipeline's second ingest assembled 0 parcels.",
-        "prior_manifest_cid": manifest_artifact["cid"],
+        "note": "Pointer to the manifest of this run and the prior runs it follows.",
+        "manifest_cid": manifest_artifact["cid"],
+        "prior_cids": prior_cids,
     }
     delta_bytes = json.dumps(delta, indent=2).encode()
     delta_artifact = upload(s3, bucket, f"runs/{run_id}-delta/delta.json", delta_bytes, "application/json")
     print("delta", delta_artifact["cid"])
 
     checks = []
-    for artifact in (artifacts[0], manifest_artifact):
+    for artifact in (car_artifact, artifacts[0], manifest_artifact):
         for prefix in GATEWAYS:
             result = fetch_gateway(prefix + artifact["cid"])
             result["expected_sha256"] = artifact["sha256"]
