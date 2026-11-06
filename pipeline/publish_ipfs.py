@@ -139,6 +139,7 @@ def main() -> None:
         "car": car_artifact,
         "prior_cids": prior_cids,
         "limitations": [
+            "The published files are every parcel with coordinates and every permit row.",
             "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
             "Open duration is days since issue on an open permit layer. No close date is published.",
             "Contractor name is the text on the permit. The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",

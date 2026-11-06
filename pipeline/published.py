@@ -1,7 +1,7 @@
 """Query the published JSON snapshot.
 
-The hosted files are the parcels with a roof age of at least 15 years or an
-open roof permit, plus the open roof-permit rows. This module does not open
+The hosted files are every parcel with coordinates and every permit row.
+This module does not open
 the internal DuckDB. Elephant MCP syncs only after an Atlas lexicon archive
 exists, so this server is the public query surface until that archive is merged.
 """
@@ -21,8 +21,7 @@ DATA = ROOT / "web" / "data"
 MILES_SQL = INSTALL_SQL.split("CREATE OR REPLACE VIEW")[0]
 
 PUBLISHED_NOTE = (
-    "Rows come from the published JSON snapshot: parcels with a roof age of at least 15 years "
-    "or an open roof permit, and the open roof-permit file. The full parcel table is not in this snapshot."
+    "Rows come from the published JSON snapshot: every parcel with coordinates, and every permit row."
 )
 
 
@@ -153,6 +152,8 @@ def open_roof_permits(
             FROM permits p
             JOIN leads l ON l.prclid = p.prclid
             WHERE l.lat IS NOT NULL
+              AND p.permit_status = 'open'
+              AND p.is_roof
               AND miles_between($lat, $lon, l.lat, l.lon) <= $miles
               AND ($min_days IS NULL OR p.days_open >= $min_days)
             ORDER BY p.days_open DESC NULLS LAST

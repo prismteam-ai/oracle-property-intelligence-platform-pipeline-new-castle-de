@@ -1,14 +1,14 @@
 {
-  "manifest_cid": "bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
-  "delta_cid": "bafybeic7urhozu6bxwm5zfgjhyw7rxfhnvsg3gh674clj3w7vhtk5vmtqm",
+  "manifest_cid": "bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
+  "delta_cid": "bafybeierrgepmhecf4uc5sbl6r3aniabdrradnub7lanmogbjer3wgpocy",
   "manifest": {
-    "run_id": "20261106T191230Z",
+    "run_id": "20261106T193050Z",
     "county": "New Castle County, DE",
     "bucket": "new-castle-county",
     "artifacts": [
       {
-        "name": "20261106T191230Z/summary.json",
-        "key": "runs/20261106T191230Z/summary.json",
+        "name": "20261106T193050Z/summary.json",
+        "key": "runs/20261106T193050Z/summary.json",
         "cid": "bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
         "cid_v0": "QmeiaSat1KdG9qbReReZ219sZRJTvnBhnmuJMWDmh2eaVv",
         "size": 616,
@@ -17,41 +17,42 @@
         "content_type": "application/json"
       },
       {
-        "name": "20261106T191230Z/leads.json",
-        "key": "runs/20261106T191230Z/leads.json",
-        "cid": "bafybeihkejjprhb44k2432wohtkyveuslwpbc6yh7yrzooipeyil4wyqyy",
-        "cid_v0": "Qme6cU41JQksNcdSTo1HE87JJgTe7YDkfJydzpYCJm7qsb",
-        "size": 2384458,
+        "name": "20261106T193050Z/leads.json",
+        "key": "runs/20261106T193050Z/leads.json",
+        "cid": "bafybeidafqokwa2xgpnsxps4pty72gidlimxbfwe4ehzajodpeg24prw4i",
+        "cid_v0": "QmUp4ruxJxx3XBW4TsVd4S7pCrgjL7zrJcQy6mmEhgSaH7",
+        "size": 100199831,
         "codec": "file",
-        "sha256": "ddec3d2c9c7b2bd31950ea95a52c939df82f9f80813ac6f7c3622a794f832fe8",
+        "sha256": "80d7e0c9c8d7d633a20e405320c9b6ab893abd82e6de49131b0f71ecc083dd09",
         "content_type": "application/json"
       },
       {
-        "name": "20261106T191230Z/permits.json",
-        "key": "runs/20261106T191230Z/permits.json",
-        "cid": "bafybeih5jfqg6a4llcjvjzxpdzd2pkev6afvfxpfgl6o2hh22qk474ibt4",
-        "cid_v0": "QmfPNkZHCCnsnmECeEKH4eJjHpkmF9KvxzEQxzNT9j6Pmg",
-        "size": 25111,
+        "name": "20261106T193050Z/permits.json",
+        "key": "runs/20261106T193050Z/permits.json",
+        "cid": "bafybeie2u7r6nwb3hpk4rijjcg7bjtjsouamob6kbvwdul7fdd2l5jg76a",
+        "cid_v0": "QmYkMygA14RhttEstPNnTAwakTfycoEqBRYzL8a3y2A7Rq",
+        "size": 129547667,
         "codec": "file",
-        "sha256": "102ae0763ddb495972a6dd34766b9d6afc8a31d477a4b716c9e82d50e5f270fa",
+        "sha256": "137bcb4b2643411d7dab666b69d0d882fb693074634622d9d9bfa67206f6fe6c",
         "content_type": "application/json"
       }
     ],
     "car": {
-      "name": "20261106T191230Z/publication.car",
-      "key": "runs/20261106T191230Z/publication.car",
-      "cid": "bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
-      "cid_v0": "QmSSJDxNwwrDDSFXjnBxfc6LcfnfhpumiZeaFjhZLtB8JM",
-      "size": 2410849,
+      "name": "20261106T193050Z/publication.car",
+      "key": "runs/20261106T193050Z/publication.car",
+      "cid": "bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
+      "cid_v0": "QmZCunF18aThVRTJ97425C99yM2E1YXnLxLSSJashge7NT",
+      "size": 229768102,
       "codec": "file",
-      "sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "content_type": "application/vnd.ipld.car",
-      "root_cid": "bafybeibop632cvz4p6y6rvvzf7ewauylomzhdhucuarsavmzaabn4c5bki"
+      "root_cid": "bafybeihnmq2qc4ey5bp4sednhbksiuljpqigl2pyciiz4qsvrabrea4ioy"
     },
     "prior_cids": [
-      "bafybeifhtayafewigymvuulndj72zxv2rqe6kuuvrsiu2kblnsb75v3nwa"
+      "bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm"
     ],
     "limitations": [
+      "The published files are every parcel with coordinates and every permit row.",
       "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
       "Open duration is days since issue on an open permit layer. No close date is published.",
       "Contractor name is the text on the permit. The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",
@@ -60,73 +61,73 @@
     ]
   },
   "delta": {
-    "name": "20261106T191230Z-delta/delta.json",
-    "key": "runs/20261106T191230Z-delta/delta.json",
-    "cid": "bafybeic7urhozu6bxwm5zfgjhyw7rxfhnvsg3gh674clj3w7vhtk5vmtqm",
-    "cid_v0": "QmUmzkoAePh4LoBbXzhT6qBfHpVfcrqfMjAptCFKaPrBNr",
+    "name": "20261106T193050Z-delta/delta.json",
+    "key": "runs/20261106T193050Z-delta/delta.json",
+    "cid": "bafybeierrgepmhecf4uc5sbl6r3aniabdrradnub7lanmogbjer3wgpocy",
+    "cid_v0": "QmY8mTmfRMnpbVYVUPxEhE6sg5PWDg422X4w6iynNrNoT3",
     "size": 290,
     "codec": "file",
-    "sha256": "05d864dae9db9fe97e01524f553293a8fd3be2929738d5dbadcea17d89486283",
+    "sha256": "c554b8a3e54fb0958215f966bf19827eb2ea6ac48445cfd3435026bc7556e0aa",
     "content_type": "application/json"
   },
   "gateway_checks": [
     {
-      "url": "https://ipfs.io/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://ipfs.io/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": false,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://dweb.link/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://dweb.link/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": false,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://ipfs.filebase.io/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://ipfs.filebase.io/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 200,
-      "size": 2410849,
-      "sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "size": 229768102,
+      "sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": true,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://gateway.pinata.cloud/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://gateway.pinata.cloud/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 200,
-      "size": 2410849,
-      "sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "size": 229768102,
+      "sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": true,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://4everland.io/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://4everland.io/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": null,
       "error": "TimeoutError",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": false,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://nftstorage.link/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://nftstorage.link/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": false,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
-      "url": "https://w3s.link/ipfs/bafybeib44ei5n7baimsrntyk62or5iaz4cribzwir4lx4l6aswzi255iri",
+      "url": "https://w3s.link/ipfs/bafybeifbotzw3tytjnrqyxso3zcw5pcyrn35mym6jbencbg23nbotigt5q",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "2db078d06e608e0463b52aac0c749f6f21e4333476814292ecf50383198292fe",
+      "expected_sha256": "25fc7febe36d6573bf56bf624cc5a07a17613cede46bc34b3663ed9ae6bc6114",
       "match": false,
-      "name": "20261106T191230Z/publication.car"
+      "name": "20261106T193050Z/publication.car"
     },
     {
       "url": "https://ipfs.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -134,7 +135,7 @@
       "error": "HTTPError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://dweb.link/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -142,7 +143,7 @@
       "error": "HTTPError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://ipfs.filebase.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -151,7 +152,7 @@
       "sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": true,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://gateway.pinata.cloud/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -159,7 +160,7 @@
       "error": "HTTPError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://4everland.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -167,7 +168,7 @@
       "error": "TimeoutError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://nftstorage.link/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -175,7 +176,7 @@
       "error": "HTTPError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
       "url": "https://w3s.link/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
@@ -183,65 +184,64 @@
       "error": "HTTPError",
       "expected_sha256": "b3666cfca8a07e4373d0274ae37ad2f6fc27851cb10d04ae11339d2d70adf511",
       "match": false,
-      "name": "20261106T191230Z/summary.json"
+      "name": "20261106T193050Z/summary.json"
     },
     {
-      "url": "https://ipfs.io/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://ipfs.io/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": false,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://dweb.link/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://dweb.link/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": false,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://ipfs.filebase.io/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://ipfs.filebase.io/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 200,
-      "size": 2757,
-      "sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "size": 2848,
+      "sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": true,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://gateway.pinata.cloud/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://gateway.pinata.cloud/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": false,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://4everland.io/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
-      "status": 200,
-      "size": 2757,
-      "sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
-      "match": true,
-      "name": "20261106T191230Z/manifest.json"
+      "url": "https://4everland.io/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
+      "status": null,
+      "error": "TimeoutError",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
+      "match": false,
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://nftstorage.link/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://nftstorage.link/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": false,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     },
     {
-      "url": "https://w3s.link/ipfs/bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
+      "url": "https://w3s.link/ipfs/bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
       "status": 429,
       "error": "HTTPError",
-      "expected_sha256": "b30906d46d863127ab65e76824169cfe267555896b735333100c742d657fd291",
+      "expected_sha256": "1346f7bcbb2ff52416146ad9397194b242b810dbd4e02eeb9bdf0da21b92cda5",
       "match": false,
-      "name": "20261106T191230Z/manifest.json"
+      "name": "20261106T193050Z/manifest.json"
     }
   ]
 }

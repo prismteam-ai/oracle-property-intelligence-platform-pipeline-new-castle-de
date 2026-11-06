@@ -442,7 +442,7 @@ def query_select(sql: str, limit: int = 100) -> dict:
 
 
 def export(directory: Path) -> dict:
-    """Write the hosted search set: roofs 15+ or an open roof permit, plus open roof permits."""
+    """Write every parcel with coordinates and every permit row."""
     directory.mkdir(parents=True, exist_ok=True)
     summary = source_summary()["coverage"]
     connection = connect(read_only=True)
@@ -451,10 +451,12 @@ def export(directory: Path) -> dict:
             """
             SELECT prclid, address, city, zip, lon, lat, roof_age_years, roof_age_basis,
                    year_built, roof_material, open_permit_count, open_roof_permit_count,
-                   oldest_open_roof_days, contractor_name, owner_out_of_area,
+                   oldest_open_roof_days,
+                   date_diff('day', oldest_open_permit_issued_at, current_timestamp) AS oldest_open_days,
+                   contractor_name, owner_out_of_area,
                    last_roof_contractor_name, last_roof_contractor_issued_at
             FROM lead_property
-            WHERE lat IS NOT NULL AND (roof_age_years >= 15 OR open_roof_permit_count > 0)
+            WHERE lat IS NOT NULL
             ORDER BY prclid
             """
         )
@@ -462,10 +464,10 @@ def export(directory: Path) -> dict:
     permits = _rows(
         connection.execute(
             """
-            SELECT prclid, apno, aptype, issued_at, days_open, comments, contractor_name
+            SELECT prclid, apno, aptype, permit_status, issued_at, days_open, is_roof,
+                   comments, contractor_name
             FROM permit_detail
-            WHERE permit_status = 'open' AND is_roof
-            ORDER BY days_open DESC NULLS LAST, apno
+            ORDER BY issued_at DESC NULLS LAST, apno
             """
         )
     )

@@ -25,14 +25,14 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm",
-  delta_cid: "bafybeic7urhozu6bxwm5zfgjhyw7rxfhnvsg3gh674clj3w7vhtk5vmtqm",
+  manifest_cid: "bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
+  delta_cid: "bafybeierrgepmhecf4uc5sbl6r3aniabdrradnub7lanmogbjer3wgpocy",
 };
 
 const IPFS = {
   "summary.json": "https://ipfs.filebase.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
-  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeihkejjprhb44k2432wohtkyveuslwpbc6yh7yrzooipeyil4wyqyy",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeih5jfqg6a4llcjvjzxpdzd2pkev6afvfxpfgl6o2hh22qk474ibt4",
+  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeidafqokwa2xgpnsxps4pty72gidlimxbfwe4ehzajodpeg24prw4i",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeie2u7r6nwb3hpk4rijjcg7bjtjsouamob6kbvwdul7fdd2l5jg76a",
   "manifest.json": `https://ipfs.filebase.io/ipfs/${PUBLISHED.manifest_cid}`,
 };
 
@@ -75,10 +75,10 @@ function renderSummary() {
   document.getElementById("summary").innerHTML = `
     <div class="cards">${cards.map(([label, value]) => `<div class="card"><span>${label}</span><strong>${Number(value).toLocaleString()}</strong></div>`).join("")}</div>
     <div class="note">
-      <p>The hosted search set is the ${state.leads.length.toLocaleString()} parcels with a roof age of at least 15 years or an open roof permit. The full parcel table is ${Number(s.parcels).toLocaleString()} rows in DuckDB.</p>
+      <p>The published file is the ${state.leads.length.toLocaleString()} parcels that have coordinates, and every permit row. The parcel table has ${Number(s.parcels).toLocaleString()} rows.</p>
       ${manifest}
       ${checks ? `<details class="sources"><summary>Gateway readback checks</summary><ul>${checks}</ul></details>` : ""}
-      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor. This run's summary matched on ipfs.filebase.io. The manifest matched on ipfs.filebase.io and 4everland.io. The CAR matched on ipfs.filebase.io and gateway.pinata.cloud. ipfs.io and dweb.link returned 429.</p>
+      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor. This run's summary and manifest matched on ipfs.filebase.io. The CAR matched on ipfs.filebase.io and gateway.pinata.cloud. ipfs.io and dweb.link returned 429.</p>
     </div>`;
 }
 
@@ -145,7 +145,9 @@ function renderSearch(leads) {
 }
 
 function renderPermits() {
-  const rows = state.permits.slice(0, 40).map((permit) => {
+  const open = state.permits.filter((permit) => permit.permit_status === "open")
+    .sort((a, b) => (a.days_open || 0) - (b.days_open || 0));
+  const rows = open.map((permit) => {
     const lead = state.leads.find((item) => item.prclid === permit.prclid);
     return `<tr>
       <td><span class="since">${permit.days_open?.toLocaleString() ?? "?"} days</span></td>
@@ -157,7 +159,7 @@ function renderPermits() {
       <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
     </tr>`;
   }).join("");
-  document.getElementById("permits").innerHTML = `<p>${state.permits.length} open roof-permit rows, longest open first. ${state.summary.open_roof_permit.toLocaleString()} parcels have at least one. HVAC rooftop units, plumbing, and porch, solar, and waterproofing work are left out. A year-built age is the building year, not a measured roof replacement.</p>
+  document.getElementById("permits").innerHTML = `<p>${open.length.toLocaleString()} open permits, most recently issued first. ${state.permits.length.toLocaleString()} permit rows are in the published file.</p>
     <table><thead><tr><th>Open</th><th>Property</th><th>Permit</th><th>Work</th><th>Contractor on open permit</th><th>Last roof contractor</th><th>BBB</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 

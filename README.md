@@ -2,7 +2,7 @@
 
 Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
 
-The page loads the published lead set. Manifest CID `bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm`. It follows prior manifest `bafybeifhtayafewigymvuulndj72zxv2rqe6kuuvrsiu2kblnsb75v3nwa`. This run's summary matched on `ipfs.filebase.io`. The manifest matched on `ipfs.filebase.io` and `4everland.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429. A rooftop HVAC unit or a plumbing permit is not counted as a roof permit. A year-built age is the building year, not a measured roof replacement. Last roof contractor is the name printed on the latest closed or new-construction roof permit. The open-permit layer has no contractor field.
+The page loads the full published set: 203,855 parcels with coordinates and 461,258 permit rows. Manifest CID `bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe`. It follows prior manifest `bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm`. The summary and the manifest matched on `ipfs.filebase.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429.
 
 ## Context
 
