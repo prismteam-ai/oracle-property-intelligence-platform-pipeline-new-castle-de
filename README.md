@@ -1,5 +1,9 @@
 # Oracle Property Intelligence Platform Pipeline - New Castle County, DE
 
+Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
+
+The page loads the published lead set. Manifest CID `bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu`. A later publish is `bafybeicrjaxh4tog6i6bdmm7ryjbxmmbgdp63vsgrxrnx2oi5bnhvsce2m`. The first CID is unchanged. The matching digest fetch is on `ipfs.filebase.io`. `ipfs.io` and `dweb.link` returned a Cloudflare challenge from this network.
+
 ## Context
 
 This repository is the **data gathering and ingestion pipeline** that supplies the [Roofing CRM & Lead Identification UI](https://github.com/prismteam-ai/roofing-crm). The CRM helps roofing companies explore properties in their service area, identify aging roofs and open roofing permits, and turn those signals into leads. This pipeline story covers collecting, loading, reconciling, and exposing the underlying property and permit datasets; the CRM UI/workflow itself is out of scope here.

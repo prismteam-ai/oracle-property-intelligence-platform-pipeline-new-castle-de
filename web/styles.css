@@ -1,0 +1,27 @@
+:root {
+  color: #1c1915;
+  background: #f4f0e8;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+}
+body { margin: 0; }
+header, main { padding: 1.25rem 1.5rem; }
+header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; border-bottom: 1px solid #d9d0c3; }
+h1 { font-size: 1.8rem; margin: 0; font-weight: 500; }
+.eyebrow, #status { margin: 0; color: #5c564c; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; }
+nav { display: flex; gap: 0.5rem; padding: 0.75rem 1.5rem; }
+nav button, form button {
+  border: 1px solid #1c1915; background: transparent; padding: 0.4rem 0.7rem; cursor: pointer;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+nav button.active, form button { background: #1c1915; color: #f4f0e8; }
+form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; margin-bottom: 0.75rem; }
+label { display: grid; gap: 0.2rem; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.8rem; }
+input, textarea { font: inherit; padding: 0.35rem; border: 1px solid #1c1915; background: white; }
+#map { height: 360px; margin: 0.5rem 0 1rem; }
+table { width: 100%; border-collapse: collapse; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; }
+th, td { text-align: left; padding: 0.35rem 0.4rem; border-bottom: 1px solid #e4ddd2; vertical-align: top; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+.card, .note { background: white; border: 1px solid #e4ddd2; padding: 0.8rem; }
+.card strong { display: block; font-size: 1.4rem; }
+.note { margin-top: 0.75rem; }
+code { font-size: 0.8rem; }

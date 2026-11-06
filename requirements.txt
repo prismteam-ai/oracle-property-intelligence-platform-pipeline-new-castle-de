@@ -1,0 +1,5 @@
+duckdb>=1.1
+mcp>=1.2
+pytz>=2024.1
+boto3>=1.35
+py-cid>=0.5

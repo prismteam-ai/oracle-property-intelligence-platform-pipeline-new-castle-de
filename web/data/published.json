@@ -1,0 +1,143 @@
+{
+  "manifest_cid": "bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+  "delta_cid": "bafybeicrjaxh4tog6i6bdmm7ryjbxmmbgdp63vsgrxrnx2oi5bnhvsce2m",
+  "manifest": {
+    "run_id": "20261106T161814Z",
+    "county": "New Castle County, DE",
+    "bucket": "new-castle-county",
+    "artifacts": [
+      {
+        "name": "20261106T161814Z/summary.json",
+        "key": "runs/20261106T161814Z/summary.json",
+        "cid": "bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+        "cid_v0": "QmYfRzeXBBy1dpRf4bxWEcmskf4Zf9jaXFgtuvyug8WhUm",
+        "size": 200,
+        "codec": "file",
+        "sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+        "content_type": "application/json"
+      },
+      {
+        "name": "20261106T161814Z/leads.json",
+        "key": "runs/20261106T161814Z/leads.json",
+        "cid": "bafybeibrh3owpc6cpbn66sqdojcdbuxa2tphw3rle5olmhex6clcgjkk3q",
+        "cid_v0": "QmRetHU5uU1qpuhFjH1efhTx2ZTX83N71KtTaXJEBA1Aqh",
+        "size": 2259800,
+        "codec": "file",
+        "sha256": "745cddbf6bd99c56df964f96548008554902334d4d0fdab45bfbfecda53f5ab2",
+        "content_type": "application/json"
+      },
+      {
+        "name": "20261106T161814Z/permits.json",
+        "key": "runs/20261106T161814Z/permits.json",
+        "cid": "bafybeicffrry25tq3o4zp4fwn6hovj7tx3jn7o6lcx7s3i2uqn2wohxrqi",
+        "cid_v0": "QmSzg6fNom3yuSe6eoXHxEbUBXgwoXJGs5BY1L8sree61P",
+        "size": 64317,
+        "codec": "file",
+        "sha256": "59e116c7852621ab12dc8e19f75bad0c16b8426270fbc0ed8fa014ef87204fae",
+        "content_type": "application/json"
+      }
+    ],
+    "prior_cids": [],
+    "limitations": [
+      "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
+      "Open duration is days since issue on an open permit layer. No close date is published.",
+      "Contractor name is the text on the permit, not a Delaware license match.",
+      "BBB ratings are not loaded.",
+      "Ownership unchanged for 10 years cannot be answered. Sale history is not in the GIS layers."
+    ]
+  },
+  "delta": {
+    "name": "20261106T161814Z-delta/delta.json",
+    "key": "runs/20261106T161814Z-delta/delta.json",
+    "cid": "bafybeicrjaxh4tog6i6bdmm7ryjbxmmbgdp63vsgrxrnx2oi5bnhvsce2m",
+    "cid_v0": "QmTowa4ZsD83KrnKMVz4HpS91urmVVTnf4byCt93LCoXs8",
+    "size": 250,
+    "codec": "file",
+    "sha256": "6cf5a765c8cc38025a67ed71a0a3072b997b3dcdce490ab91c9ba0a82cfee61d",
+    "content_type": "application/json"
+  },
+  "gateway_checks": [
+    {
+      "url": "https://ipfs.io/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "match": false,
+      "name": "20261106T161814Z/summary.json"
+    },
+    {
+      "url": "https://dweb.link/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "match": false,
+      "name": "20261106T161814Z/summary.json"
+    },
+    {
+      "url": "https://ipfs.filebase.io/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+      "status": 200,
+      "size": 200,
+      "sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "expected_sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "match": true,
+      "name": "20261106T161814Z/summary.json"
+    },
+    {
+      "url": "https://nftstorage.link/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "match": false,
+      "name": "20261106T161814Z/summary.json"
+    },
+    {
+      "url": "https://w3s.link/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "0d080c1f39ad0a08016fa4e8a5588ed0b39edc2f6df47be6578b7a3f5248d554",
+      "match": false,
+      "name": "20261106T161814Z/summary.json"
+    },
+    {
+      "url": "https://ipfs.io/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "match": false,
+      "name": "20261106T161814Z/manifest.json"
+    },
+    {
+      "url": "https://dweb.link/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "match": false,
+      "name": "20261106T161814Z/manifest.json"
+    },
+    {
+      "url": "https://ipfs.filebase.io/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+      "status": 200,
+      "size": 1834,
+      "sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "expected_sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "match": true,
+      "name": "20261106T161814Z/manifest.json"
+    },
+    {
+      "url": "https://nftstorage.link/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "match": false,
+      "name": "20261106T161814Z/manifest.json"
+    },
+    {
+      "url": "https://w3s.link/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+      "status": 429,
+      "error": "HTTPError",
+      "expected_sha256": "f8f5eddb5b163f5276522a7330ae2525fc6324c76f8e8fe6c96a7dc847ded64b",
+      "match": false,
+      "name": "20261106T161814Z/manifest.json"
+    }
+  ]
+}
