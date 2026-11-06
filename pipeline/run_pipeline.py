@@ -409,18 +409,39 @@ def assemble_batch(connection: duckdb.DuckDBPyConnection, run_id: str, batch: in
             count(*) FILTER (WHERE status = 'open') AS open_permit_count,
             count(*) FILTER (
               WHERE status = 'open'
-                AND (upper(coalesce(comments, '')) LIKE '%ROOF%'
-                  OR upper(coalesce(aptype, '')) LIKE '%ROOF%')
+                AND (
+                  regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+                  OR regexp_replace(upper(coalesce(aptype, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+                )
+                AND (
+                  upper(coalesce(aptype, '')) NOT IN ('HVAC', 'PLUMBING')
+                  OR regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g')
+                     SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
+                )
             ) AS open_roof_permit_count,
             min(issued_at) FILTER (WHERE status = 'open') AS oldest_open_permit_issued_at,
             min(issued_at) FILTER (
               WHERE status = 'open'
-                AND (upper(coalesce(comments, '')) LIKE '%ROOF%'
-                  OR upper(coalesce(aptype, '')) LIKE '%ROOF%')
+                AND (
+                  regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+                  OR regexp_replace(upper(coalesce(aptype, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+                )
+                AND (
+                  upper(coalesce(aptype, '')) NOT IN ('HVAC', 'PLUMBING')
+                  OR regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g')
+                     SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
+                )
             ) AS oldest_open_roof_permit_issued_at,
             max(issued_at) FILTER (
-              WHERE upper(coalesce(comments, '')) LIKE '%ROOF%'
-                 OR upper(coalesce(aptype, '')) LIKE '%ROOF%'
+              WHERE (
+                regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+                OR regexp_replace(upper(coalesce(aptype, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+              )
+              AND (
+                upper(coalesce(aptype, '')) NOT IN ('HVAC', 'PLUMBING')
+                OR regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g')
+                   SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
+              )
             ) AS latest_roof_permit_issued_at
           FROM permit
           WHERE prclid IN (SELECT prclid FROM walk_batch)

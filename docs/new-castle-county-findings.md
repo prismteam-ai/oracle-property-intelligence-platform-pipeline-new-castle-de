@@ -15,7 +15,7 @@ DuckDB file `data/duckdb/newcastle.duckdb`. Query views `lead_property` and `per
 | `county_record` permits | 12 layers, about 701,000 rows | `CustomMaps/Permits` layers 0–11. Keyed by `NEW_OID` because `OBJECTID` repeats. |
 | Appeals, rollback, assessment requests | 7 / 1,753 / 2,185 / 496 | `BaseMaps/Assessment` layers 22, 23, 24, 29. |
 
-Parcel rollup after `pipeline/build_parcels.py` run `20261106T002721Z`: roofs with an age of 15 or more 6,157; any open permit 10,735; open roof permit 236; out-of-area owner 10,542; contractor name printed on a permit 113,900.
+Parcel rollup after `pipeline/build_parcels.py` run `20261106T163040Z`: roofs with an age of 15 or more 6,043; any open permit 10,735; open roof permit 178; out-of-area owner 10,542; contractor name printed on a permit 113,046. A rooftop HVAC unit and a plumbing permit are not counted as a roof permit. A year-built age is the building year, not a measured roof replacement.
 
 Two pipeline runs are recorded. The second assembled 0 parcels.
 

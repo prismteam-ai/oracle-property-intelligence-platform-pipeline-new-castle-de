@@ -121,8 +121,15 @@ FROM (
       ELSE source
     END AS permit_status,
     (
-      upper(coalesce(json_extract_string(attrs, '$.COMMENTS'), '')) LIKE '%ROOF%'
-      OR upper(coalesce(json_extract_string(attrs, '$.APTYPE'), '')) LIKE '%ROOF%'
+      (
+        regexp_replace(upper(coalesce(json_extract_string(attrs, '$.COMMENTS'), '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+        OR regexp_replace(upper(coalesce(json_extract_string(attrs, '$.APTYPE'), '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+      )
+      AND (
+        upper(coalesce(json_extract_string(attrs, '$.APTYPE'), '')) NOT IN ('HVAC', 'PLUMBING')
+        OR regexp_replace(upper(coalesce(json_extract_string(attrs, '$.COMMENTS'), '')), 'ROOF[ -]?TOP', ' ', 'g')
+           SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
+      )
     ) AS is_roof,
     fetched_at,
     row_number() OVER (

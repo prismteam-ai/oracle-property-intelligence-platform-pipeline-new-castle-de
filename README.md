@@ -2,7 +2,7 @@
 
 Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
 
-The page loads the published lead set. Manifest CID `bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu`. A later publish is `bafybeicrjaxh4tog6i6bdmm7ryjbxmmbgdp63vsgrxrnx2oi5bnhvsce2m`. The first CID is unchanged. The matching digest fetch is on `ipfs.filebase.io`. `ipfs.io` and `dweb.link` returned a Cloudflare challenge from this network.
+The page loads the published lead set. Manifest CID `bafybeiapogy36guzgizt2teewa6ywddgtucu3vbdavpog4xum7qyg7rfom`. A later publish is `bafybeihf3sayrfzaebakgcw3wn3gckkl6fi4o3hr6asyh5sj7yrqjh3zmi`. The first CID is unchanged. The matching digest fetch is on `ipfs.filebase.io`. `ipfs.io` and `dweb.link` returned a Cloudflare challenge from this network. A rooftop HVAC unit or a plumbing permit is not counted as a roof permit. A year-built age is the building year, not a measured roof replacement.
 
 ## Context
 

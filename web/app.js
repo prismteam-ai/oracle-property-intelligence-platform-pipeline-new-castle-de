@@ -20,15 +20,15 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
-  delta_cid: "bafybeicrjaxh4tog6i6bdmm7ryjbxmmbgdp63vsgrxrnx2oi5bnhvsce2m",
+  manifest_cid: "bafybeiapogy36guzgizt2teewa6ywddgtucu3vbdavpog4xum7qyg7rfom",
+  delta_cid: "bafybeihf3sayrfzaebakgcw3wn3gckkl6fi4o3hr6asyh5sj7yrqjh3zmi",
 };
 
 const IPFS = {
-  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeiezmsdsqgesjtyyw5nui6vj6yksh53hupo2n7tbzjvxdvwjsazdii",
-  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeibrh3owpc6cpbn66sqdojcdbuxa2tphw3rle5olmhex6clcgjkk3q",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeicffrry25tq3o4zp4fwn6hovj7tx3jn7o6lcx7s3i2uqn2wohxrqi",
-  "published.json": "https://ipfs.filebase.io/ipfs/bafybeidtplm7nvijsflt6xrddfujr3bxuyeoljsaih5yrw7m4k4awwl2bu",
+  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeiegnguttuuodmalnqat5nsqy5ikxxi5x5cxe2xb2l6pnvqxpgwniu",
+  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeif7pt7mppcl2vzfekhcmt3locjegapjwvpmjb4azl3mn5avzwdxky",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeiarmwqsbi2z2hexbdtf7qq62scakz464uduyqv33im4cfegthapdi",
+  "published.json": "https://ipfs.filebase.io/ipfs/bafybeiapogy36guzgizt2teewa6ywddgtucu3vbdavpog4xum7qyg7rfom",
 };
 
 async function loadJson(name) {
@@ -55,7 +55,7 @@ function renderSummary() {
     ["With coordinates", s.with_coordinates],
     ["Year built", s.with_year_built],
     ["Roofs 15+", s.roofs_15_or_older],
-    ["Open roof permits", s.open_roof_permit],
+    ["Parcels with an open roof permit", s.open_roof_permit],
     ["Out-of-area owners", s.out_of_area_owner],
   ];
   const manifest = pub
@@ -131,7 +131,7 @@ function renderPermits() {
       <td>${permit.contractor_name ?? "—"}<br><span>BBB not loaded</span></td>
     </tr>`;
   }).join("");
-  document.getElementById("permits").innerHTML = `<p>${state.permits.length} open permits whose type or comment mentions roof, longest open first.</p>
+  document.getElementById("permits").innerHTML = `<p>${state.permits.length} open roof-permit rows, longest open first. ${state.summary.open_roof_permit.toLocaleString()} parcels in the owner seed have at least one. Five other permit ids are four condo units and one id the seed does not contain. HVAC rooftop units and plumbing permits are left out. A year-built age is the building year, not a measured roof replacement.</p>
     <table><thead><tr><th>Days</th><th>Address</th><th>Permit</th><th>Issued</th><th>Comment</th><th>Contractor</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 

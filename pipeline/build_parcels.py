@@ -106,7 +106,15 @@ def main() -> None:
         SELECT * EXCLUDE (dup_rank)
         FROM (
           SELECT *,
-            (upper(coalesce(comments, '')) LIKE '%ROOF%' OR upper(coalesce(aptype, '')) LIKE '%ROOF%') AS is_roof,
+            (
+              regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+              OR regexp_replace(upper(coalesce(aptype, '')), 'ROOF[ -]?TOP', ' ', 'g') LIKE '%ROOF%'
+            )
+            AND (
+              upper(coalesce(aptype, '')) NOT IN ('HVAC', 'PLUMBING')
+              OR regexp_replace(upper(coalesce(comments, '')), 'ROOF[ -]?TOP', ' ', 'g')
+                 SIMILAR TO '%(ROOFING|SHINGLE|RE-ROOF|REROOF|SHEATHING)%'
+            ) AS is_roof,
             row_number() OVER (
               PARTITION BY prclid, coalesce(apno, source || ':' || object_id::VARCHAR)
               ORDER BY CASE WHEN is_open THEN 0 ELSE 1 END, source, object_id
