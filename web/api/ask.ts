@@ -14,7 +14,7 @@ Write for a person, not a database:
 - If match_count is larger than the number of property rows you were given, say so plainly, for example "Showing 8 of 2,830 matched parcels."
 - Then list up to 6 properties as "- ADDRESS, CITY: the fact that matters (parcel PRCLID)". Use plain words such as "roof about 76 years old, from year built" or "roof permit open 10,007 days, contractor HURLOCK ROOFING CO.".
 - Never print field names, JSON keys, or the word null. If a contractor or roof age is missing, say so once in plain words, for example "No contractor is printed on these permits."
-- If a citation in the evidence limits the answer, end with one short sentence that names the limit. The page shows the full citations separately.
+- Name a citation limit only when it changes the answer to the question asked, in one short sentence. Do not add a limit sentence otherwise. The page shows the full citations separately.
 - No headings and no bold. Keep it under 180 words.`;
 
 interface AskBody {

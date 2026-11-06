@@ -15,7 +15,7 @@ const BASIS = {
 const PAGE = 200;
 const state = {
   leads: [], byParcel: new Map(), openPermits: [], summary: null, published: null, map: null, layer: null,
-  results: [], resultLimit: PAGE, permitLimit: PAGE, runId: 0,
+  results: [], resultLimit: PAGE, permitLimit: PAGE, permitRoofOnly: false, runId: 0,
 };
 
 function miles(lat1, lon1, lat2, lon2) {
@@ -29,8 +29,8 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeihmlq6p6ipko3m25xerrydhbhuj7ugpl55vqmpffwkgrjlv77ptky",
-  delta_cid: "bafybeifyvqmh3tpowr3uyotfkghytte7iul6agqwoyci56bodmaeb6ibx4",
+  manifest_cid: "bafybeibq2gg77nf6sthvpissah656yr6aoqgqptbxvsaw5abvw2k6yomh4",
+  delta_cid: "bafybeiaio3gkbqtm6x6ua3s4obkwn7nwq74xsh5jksq2hl6dwxfdpmn2ci",
 };
 
 const IPFS = {
@@ -139,13 +139,14 @@ function draw(leads, lat, lon, radius) {
   }
   if (state.layer) state.layer.remove();
   state.layer = L.layerGroup().addTo(state.map);
-  L.circle([lat, lon], { radius: radius * 1609.344, color: "#0b57d0", weight: 1, fillColor: "#d3e3fd", fillOpacity: 0.25 }).addTo(state.layer);
-  leads.slice(0, 200).forEach((lead) => {
-    L.circleMarker([lead.lat, lead.lon], { radius: 4, color: "#9b72cb", weight: 1, fillOpacity: 0.8 })
+  const circle = L.circle([lat, lon], { radius: radius * 1609.344, color: "#0b57d0", weight: 1, fillColor: "#d3e3fd", fillOpacity: 0.25 }).addTo(state.layer);
+  const canvas = L.canvas({ padding: 0.5 });
+  leads.forEach((lead) => {
+    L.circleMarker([lead.lat, lead.lon], { renderer: canvas, radius: 4, color: "#9b72cb", weight: 1, fillOpacity: 0.8 })
       .bindPopup(`${lead.address}, ${lead.city}<br>Roof age ${lead.roof_age_years ?? "unknown"} (${lead.roof_age_basis ?? "no basis"})`)
       .addTo(state.layer);
   });
-  state.map.setView([lat, lon], 12);
+  state.map.fitBounds(circle.getBounds(), { padding: [24, 24], maxZoom: 14 });
 }
 
 function moreButton(shown, total, name) {
@@ -167,7 +168,7 @@ function renderSearch() {
 }
 
 function renderPermits() {
-  const open = state.openPermits;
+  const open = state.permitRoofOnly ? state.openPermits.filter((permit) => permit.is_roof) : state.openPermits;
   const shown = Math.min(state.permitLimit, open.length);
   const rows = open.slice(0, shown).map((permit) => `<tr>
       <td><span class="since">${permit.days_open?.toLocaleString() ?? "?"} days</span></td>
@@ -177,8 +178,9 @@ function renderPermits() {
       <td>${contractorCell(permit.contractor_name)}</td>
       <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
     </tr>`).join("");
-  const roof = open.filter((permit) => permit.is_roof).length;
-  document.getElementById("permits").innerHTML = `<p>${open.length.toLocaleString()} open permits in the county, ${roof.toLocaleString()} of them for roof work, most recently issued first · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
+  const roof = state.openPermits.filter((permit) => permit.is_roof).length;
+  document.getElementById("permits").innerHTML = `<div class="toolbar"><p>${open.length.toLocaleString()} ${state.permitRoofOnly ? "open roof permits" : `open permits in the county, ${roof.toLocaleString()} of them for roof work`}, longest open first · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
+    <button type="button" class="btn tonal" data-roof-toggle>${state.permitRoofOnly ? "Show all open permits" : "Roof work only"}</button></div>
     <table><thead><tr><th>Open</th><th>Property</th><th>Permit</th><th>Work</th><th>Contractor on open permit</th><th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
 }
 
@@ -225,6 +227,12 @@ async function runSearch(lat, lon, radius, minAge, openOnly) {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-roof-toggle]")) {
+    state.permitRoofOnly = !state.permitRoofOnly;
+    state.permitLimit = PAGE;
+    renderPermits();
+    return;
+  }
   const more = event.target.closest("[data-more]");
   if (!more) return;
   if (more.dataset.more === "search") {
@@ -364,7 +372,7 @@ Promise.all([loadJson("summary.json"), loadTileIndex(), loadJson("manifest.json"
     renderSummary();
     runSearch(39.739072, -75.539787, 5, 15, false);
     return loadJson("open_permits.json").then((permits) => {
-      state.openPermits = permits;
+      state.openPermits = [...permits].sort((a, b) => (b.days_open ?? -1) - (a.days_open ?? -1));
       renderPermits();
     });
   })

@@ -147,6 +147,7 @@ def main() -> None:
     artifacts.append(upload(s3, bucket, f"runs/{run_id}/tiles_index.json", index_bytes, "application/json"))
     print("tiles_index.json", artifacts[-1]["cid"])
 
+    current_counts = {k: v for k, v in json.loads((DATA / "summary.json").read_text()).items() if isinstance(v, (int, float))}
     manifest = {
         "run_id": run_id,
         "county": "New Castle County, DE",
@@ -154,6 +155,7 @@ def main() -> None:
         "artifacts": artifacts,
         "car": car_artifact,
         "prior_cids": prior_cids,
+        "counts": current_counts,
         "limitations": [
             "The published files are every parcel with coordinates and every permit row.",
             "tiles_index.json lists 0.05-degree map tiles. Each tile holds every parcel in it plus its open and roof permits.",
@@ -168,12 +170,23 @@ def main() -> None:
     manifest_artifact = upload(s3, bucket, f"runs/{run_id}/manifest.json", manifest_bytes, "application/json")
     print("manifest", manifest_artifact["cid"])
 
-    # The delta object points at the manifest. It carries no new counts.
+    # The delta lists this run's counts, the prior run's counts, and the change between them.
+    # The first run that carries counts has no prior counts, so its changes are null.
+    prior_counts = previous["manifest"].get("counts") if previous else None
+    changes = (
+        {k: current_counts[k] - prior_counts[k] for k in current_counts if k in prior_counts}
+        if prior_counts
+        else None
+    )
     delta = {
         "run_id": run_id + "-delta",
-        "note": "Pointer to the manifest of this run and the prior runs it follows.",
+        "note": "This run's manifest, the prior manifest, and the change in each county count between them.",
         "manifest_cid": manifest_artifact["cid"],
+        "previous_manifest_cid": previous["manifest_cid"] if previous else None,
         "prior_cids": prior_cids,
+        "counts": current_counts,
+        "previous_counts": prior_counts,
+        "changes": changes,
     }
     delta_bytes = json.dumps(delta, indent=2).encode()
     delta_artifact = upload(s3, bucket, f"runs/{run_id}-delta/delta.json", delta_bytes, "application/json")

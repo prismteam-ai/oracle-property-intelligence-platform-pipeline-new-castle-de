@@ -186,6 +186,7 @@ details.sources ul { padding-left: 18px; }
 .btn.text { background: transparent; color: var(--blue); }
 .btn:hover { filter: brightness(0.97); }
 .btn.more { display: block; margin: 12px auto 0; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .busy { opacity: 0.5; pointer-events: none; transition: opacity 0.2s; }
 
 #gps-status { min-height: 20px; font-size: 12px; }
