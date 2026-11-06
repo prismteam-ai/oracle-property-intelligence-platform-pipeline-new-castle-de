@@ -21,6 +21,7 @@ import ssl
 import subprocess
 import tempfile
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,7 +42,7 @@ GATEWAYS = (
     "https://nftstorage.link/ipfs/",
     "https://w3s.link/ipfs/",
 )
-DATA_FILES = ("summary.json", "leads.json", "permits.json")
+DATA_FILES = ("summary.json", "leads.json", "permits.json", "open_permits.json")
 
 
 def credentials() -> tuple[str, str, str]:
@@ -118,6 +119,7 @@ def main() -> None:
     staging.mkdir(parents=True)
     for name in DATA_FILES:
         shutil.copy(DATA / name, staging / name)
+    shutil.copytree(DATA / "tiles", staging / "tiles")
     car_path = staging.parent / f"{run_id}.car"
     car_root = pack_car(staging, car_path)
     car_body = car_path.read_bytes()
@@ -131,6 +133,20 @@ def main() -> None:
         artifacts.append(upload(s3, bucket, f"runs/{run_id}/{name}", body, "application/json"))
         print(name, artifacts[-1]["cid"], artifacts[-1]["size"])
 
+    tile_index = json.loads((DATA / "tiles_index.json").read_text())
+
+    def upload_tile(key: str) -> tuple[str, dict]:
+        body = (DATA / "tiles" / tile_index["tiles"][key]["file"]).read_bytes()
+        return key, upload(client(), bucket, f"runs/{run_id}/tiles/{key}.json", body, "application/json")
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for key, artifact in pool.map(upload_tile, sorted(tile_index["tiles"])):
+            tile_index["tiles"][key]["cid"] = artifact["cid"]
+    print("tiles", len(tile_index["tiles"]))
+    index_bytes = json.dumps(tile_index, indent=2).encode()
+    artifacts.append(upload(s3, bucket, f"runs/{run_id}/tiles_index.json", index_bytes, "application/json"))
+    print("tiles_index.json", artifacts[-1]["cid"])
+
     manifest = {
         "run_id": run_id,
         "county": "New Castle County, DE",
@@ -140,6 +156,7 @@ def main() -> None:
         "prior_cids": prior_cids,
         "limitations": [
             "The published files are every parcel with coordinates and every permit row.",
+            "tiles_index.json lists 0.05-degree map tiles. Each tile holds every parcel in it plus its open and roof permits.",
             "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
             "Open duration is days since issue on an open permit layer. No close date is published.",
             "Contractor name is the text on the permit. The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",

@@ -12,7 +12,11 @@ const BASIS = {
   latest_roof_permit: "from last roof permit",
 };
 
-const state = { leads: [], permits: [], summary: null, published: null, map: null, layer: null };
+const PAGE = 200;
+const state = {
+  leads: [], byParcel: new Map(), openPermits: [], summary: null, published: null, map: null, layer: null,
+  results: [], resultLimit: PAGE, permitLimit: PAGE, runId: 0,
+};
 
 function miles(lat1, lon1, lat2, lon2) {
   const r = 3958.7613;
@@ -25,14 +29,16 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe",
-  delta_cid: "bafybeierrgepmhecf4uc5sbl6r3aniabdrradnub7lanmogbjer3wgpocy",
+  manifest_cid: "bafybeihmlq6p6ipko3m25xerrydhbhuj7ugpl55vqmpffwkgrjlv77ptky",
+  delta_cid: "bafybeifyvqmh3tpowr3uyotfkghytte7iul6agqwoyci56bodmaeb6ibx4",
 };
 
 const IPFS = {
   "summary.json": "https://ipfs.filebase.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
   "leads.json": "https://ipfs.filebase.io/ipfs/bafybeidafqokwa2xgpnsxps4pty72gidlimxbfwe4ehzajodpeg24prw4i",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeie2u7r6nwb3hpk4rijjcg7bjtjsouamob6kbvwdul7fdd2l5jg76a",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeigusdsrma6mhxhopk2aiyonw3q22et44rk674lald6qjldr5mdylq",
+  "open_permits.json": "https://ipfs.filebase.io/ipfs/bafybeieqlv2hj6xxg3bxhgbjfkdgywhe3m4guyp4upfbybaaomg5gi7ngm",
+  "tiles_index.json": GATEWAY + TILE_INDEX_CID,
   "manifest.json": `https://ipfs.filebase.io/ipfs/${PUBLISHED.manifest_cid}`,
 };
 
@@ -75,15 +81,16 @@ function renderSummary() {
   document.getElementById("summary").innerHTML = `
     <div class="cards">${cards.map(([label, value]) => `<div class="card"><span>${label}</span><strong>${Number(value).toLocaleString()}</strong></div>`).join("")}</div>
     <div class="note">
-      <p>The published file is the ${state.leads.length.toLocaleString()} parcels that have coordinates, and every permit row. The parcel table has ${Number(s.parcels).toLocaleString()} rows.</p>
+      <p>Every one of the ${tileTotals().parcels.toLocaleString()} parcels with coordinates is published, and every permit row. The parcel table has ${Number(s.parcels).toLocaleString()} rows. The page loads the ${Object.keys(tileIndex.tiles).length} map tiles around a search instead of the whole county at once.</p>
+      <p>Files: ${["summary.json", "leads.json", "permits.json", "open_permits.json", "tiles_index.json"].map((name) => `<a href="${IPFS[name]}" target="_blank" rel="noopener">${name}</a>`).join(" · ")}</p>
       ${manifest}
       ${checks ? `<details class="sources"><summary>Gateway readback checks</summary><ul>${checks}</ul></details>` : ""}
-      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor. This run's summary and manifest matched on ipfs.filebase.io. The CAR matched on ipfs.filebase.io and gateway.pinata.cloud. ipfs.io and dweb.link returned 429.</p>
+      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
     </div>`;
 }
 
-function search(lat, lon, radius, minAge, openOnly) {
-  return state.leads
+function search(lat, lon, radius, minAge, openOnly, leads = state.leads) {
+  return leads
     .map((lead) => ({ ...lead, distance_miles: miles(lat, lon, lead.lat, lead.lon) }))
     .filter((lead) => lead.distance_miles <= radius)
     .filter((lead) => minAge == null || (lead.roof_age_years != null && lead.roof_age_years >= minAge))
@@ -106,12 +113,17 @@ function lastRoofCell(lead) {
   return `<span class="who">${escapeHtml(lead.last_roof_contractor_name)}</span><span class="sub">Closed roof permit${year ? ` · ${year}` : ""}</span>`;
 }
 
+function openPermitFor(prclid, byParcel = state.byParcel) {
+  const open = (byParcel.get(prclid) || []).filter((item) => item.permit_status === "open");
+  return open.find((item) => item.is_roof) || open[0];
+}
+
 function rowHtml(lead) {
-  const permit = state.permits.find((item) => item.prclid === lead.prclid);
+  const permit = openPermitFor(lead.prclid);
   return `<tr>
-    <td><span class="addr">${escapeHtml(lead.address.replace(/\s+/g, " "))}</span><span class="sub">${escapeHtml(lead.city)} · ${lead.distance_miles.toFixed(2)} mi · parcel ${lead.prclid}</span></td>
+    <td><span class="addr">${escapeHtml(lead.address)}</span><span class="sub">${escapeHtml(lead.city)} · ${lead.distance_miles.toFixed(2)} mi · parcel ${lead.prclid}</span></td>
     <td>${ageCell(lead)}</td>
-    <td>${permit ? `<span class="since">Open ${permit.days_open?.toLocaleString() ?? "?"} days</span>` : `<span class="none">None open</span>`}</td>
+    <td>${permit ? `<span class="since">Open ${permit.days_open?.toLocaleString() ?? "?"} days</span><span class="sub">${permit.is_roof ? "Roof work" : escapeHtml(permit.aptype || "Other work")}${lead.open_permit_count > 1 ? ` · ${lead.open_permit_count} open` : ""}</span>` : `<span class="none">None open</span>`}</td>
     <td>${permit ? contractorCell(permit.contractor_name) : `<span class="none">—</span>`}</td>
     <td>${lastRoofCell(lead)}</td>
     <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
@@ -136,44 +148,93 @@ function draw(leads, lat, lon, radius) {
   state.map.setView([lat, lon], 12);
 }
 
-function renderSearch(leads) {
-  document.getElementById("search-count").textContent = `${leads.length.toLocaleString()} properties · showing ${Math.min(50, leads.length)} closest`;
-  document.getElementById("search-results").innerHTML = `<table>
-    <thead><tr><th>Property</th><th>Roof age</th><th>Open roof permit</th><th>Contractor on open permit</th><th>Last roof contractor</th><th>BBB</th></tr></thead>
-    <tbody>${leads.slice(0, 50).map(rowHtml).join("")}</tbody>
-  </table>`;
+function moreButton(shown, total, name) {
+  return shown < total
+    ? `<button type="button" class="btn tonal more" data-more="${name}">Show ${Math.min(PAGE, total - shown).toLocaleString()} more</button>`
+    : "";
+}
+
+function renderSearch() {
+  const leads = state.results;
+  const shown = Math.min(state.resultLimit, leads.length);
+  document.getElementById("search-count").textContent = `${leads.length.toLocaleString()} properties, closest first · showing ${shown.toLocaleString()}`;
+  document.getElementById("search-results").innerHTML = leads.length
+    ? `<table>
+    <thead><tr><th>Property</th><th>Roof age</th><th>Open permit</th><th>Contractor on open permit</th><th>Last roof contractor</th><th>BBB</th></tr></thead>
+    <tbody>${leads.slice(0, shown).map(rowHtml).join("")}</tbody>
+  </table>${moreButton(shown, leads.length, "search")}`
+    : `<p class="empty">No properties match. Try a larger radius or a lower roof age.</p>`;
 }
 
 function renderPermits() {
-  const open = state.permits.filter((permit) => permit.permit_status === "open")
-    .sort((a, b) => (a.days_open || 0) - (b.days_open || 0));
-  const rows = open.map((permit) => {
-    const lead = state.leads.find((item) => item.prclid === permit.prclid);
-    return `<tr>
+  const open = state.openPermits;
+  const shown = Math.min(state.permitLimit, open.length);
+  const rows = open.slice(0, shown).map((permit) => `<tr>
       <td><span class="since">${permit.days_open?.toLocaleString() ?? "?"} days</span></td>
-      <td><span class="addr">${lead ? escapeHtml(lead.address.replace(/\s+/g, " ")) : permit.prclid}</span><span class="sub">${lead ? escapeHtml(lead.city) : ""}</span></td>
-      <td>${escapeHtml(permit.apno)}<span class="sub">${escapeHtml(permit.aptype ?? "")} · issued ${escapeHtml((permit.issued_at ?? "").slice(0, 10))}</span></td>
-      <td>${escapeHtml(permit.comments ?? "")}</td>
+      <td><span class="addr">${escapeHtml(permit.address ?? permit.prclid)}</span><span class="sub">${escapeHtml(permit.city ?? "")} · parcel ${escapeHtml(permit.prclid)}</span></td>
+      <td>${escapeHtml(permit.apno)}<span class="sub">${escapeHtml(permit.aptype ?? "")} · issued ${escapeHtml(permit.issued_on ?? "date not published")}</span></td>
+      <td>${permit.is_roof ? `<span class="since">Roof</span> ` : ""}${escapeHtml(permit.comments ?? "")}</td>
       <td>${contractorCell(permit.contractor_name)}</td>
-      <td>${lastRoofCell(lead)}</td>
       <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("permits").innerHTML = `<p>${open.length.toLocaleString()} open permits, most recently issued first. ${state.permits.length.toLocaleString()} permit rows are in the published file.</p>
-    <table><thead><tr><th>Open</th><th>Property</th><th>Permit</th><th>Work</th><th>Contractor on open permit</th><th>Last roof contractor</th><th>BBB</th></tr></thead><tbody>${rows}</tbody></table>`;
+    </tr>`).join("");
+  const roof = open.filter((permit) => permit.is_roof).length;
+  document.getElementById("permits").innerHTML = `<p>${open.length.toLocaleString()} open permits in the county, ${roof.toLocaleString()} of them for roof work, most recently issued first · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
+    <table><thead><tr><th>Open</th><th>Property</th><th>Permit</th><th>Work</th><th>Contractor on open permit</th><th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
 }
 
-function answer(question) {
+async function answer(question) {
   const text = question.toLowerCase();
   const city = Object.keys(CITIES).find((name) => text.includes(name)) || "wilmington";
   const [lat, lon] = CITIES[city];
   const radius = Number((text.match(/(\d+(?:\.\d+)?)\s*mile/) || [0, 5])[1]);
   const age = Number((text.match(/older than\s+(\d+)/) || text.match(/(\d+)\s*years/) || [0, 15])[1]);
   const openOnly = text.includes("permit") || text.includes("contractor");
-  const leads = search(lat, lon, radius, openOnly ? null : age, openOnly);
-  const shown = openOnly ? leads.sort((a, b) => (b.oldest_open_roof_days || 0) - (a.oldest_open_roof_days || 0)) : leads;
-  return { city, lat, lon, radius, age, openOnly, leads: shown };
+  const area = await loadArea(lat, lon, radius);
+  const leads = search(lat, lon, radius, openOnly ? null : age, openOnly, area.leads);
+  const shown = openOnly ? leads.sort((a, b) => (b.oldest_open_days || 0) - (a.oldest_open_days || 0)) : leads;
+  return { city, lat, lon, radius, age, openOnly, leads: shown, byParcel: area.byParcel };
 }
+
+async function runSearch(lat, lon, radius, minAge, openOnly) {
+  const status = document.getElementById("search-count");
+  if (![lat, lon, radius].every(Number.isFinite) || radius <= 0) {
+    status.textContent = "Enter a latitude, longitude, and a radius above 0.";
+    return;
+  }
+  const id = ++state.runId;
+  const results = document.getElementById("search-results");
+  results.classList.add("busy");
+  status.textContent = `Loading parcels within ${radius} miles…`;
+  try {
+    const area = await loadArea(lat, lon, radius, (done, total) => {
+      if (id === state.runId) status.textContent = `Loading map tiles ${done} of ${total}…`;
+    });
+    if (id !== state.runId) return;
+    state.leads = area.leads;
+    state.byParcel = area.byParcel;
+  } catch (error) {
+    if (id === state.runId) status.textContent = `Published data did not load (${error.message}).`;
+    return;
+  } finally {
+    results.classList.remove("busy");
+  }
+  state.results = search(lat, lon, radius, openOnly ? null : minAge, openOnly);
+  state.resultLimit = PAGE;
+  draw(state.results, lat, lon, radius);
+  renderSearch();
+}
+
+document.addEventListener("click", (event) => {
+  const more = event.target.closest("[data-more]");
+  if (!more) return;
+  if (more.dataset.more === "search") {
+    state.resultLimit += PAGE;
+    renderSearch();
+  } else {
+    state.permitLimit += PAGE;
+    renderPermits();
+  }
+});
 
 document.querySelectorAll("nav button").forEach((button) => {
   button.addEventListener("click", () => show(button.dataset.panel));
@@ -186,9 +247,7 @@ document.getElementById("search-form").addEventListener("submit", (event) => {
   const radius = Number(document.getElementById("miles").value);
   const minAge = Number(document.getElementById("min-age").value);
   const openOnly = document.getElementById("open-only").checked;
-  const leads = search(lat, lon, radius, openOnly ? null : minAge, openOnly);
-  draw(leads, lat, lon, radius);
-  renderSearch(leads);
+  runSearch(lat, lon, radius, minAge, openOnly);
 });
 
 const CITATIONS = [
@@ -200,10 +259,22 @@ const CITATIONS = [
 
 document.getElementById("ask-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const question = document.getElementById("question").value;
-  const result = answer(question);
+  const question = document.getElementById("question").value.trim();
+  if (!question) return;
+  const box = document.getElementById("answer");
+  const send = document.querySelector("#ask-form .send");
+  send.disabled = true;
+  box.innerHTML = `<div class="response thinking"><span class="spark"></span><div><p class="response-body">Loading published parcels for this question…</p></div></div>`;
+  let result;
+  try {
+    result = await answer(question);
+  } catch (error) {
+    box.innerHTML = `<div class="response"><span class="spark"></span><div><p class="response-body">Published data did not load (${escapeHtml(error.message)}).</p></div></div>`;
+    send.disabled = false;
+    return;
+  }
   const rows = result.leads.slice(0, 8).map((lead) => {
-    const permit = state.permits.find((item) => item.prclid === lead.prclid);
+    const permit = openPermitFor(lead.prclid, result.byParcel);
     return {
       source: "published-lead",
       prclid: lead.prclid,
@@ -213,17 +284,15 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
       roof_age_years: lead.roof_age_years,
       roof_age_basis: lead.roof_age_basis,
       permit: permit
-        ? { apno: permit.apno, days_open: permit.days_open, contractor_name: permit.contractor_name, aptype: permit.aptype }
+        ? { apno: permit.apno, issued_on: permit.issued_on, days_open: permit.days_open, is_roof: permit.is_roof, contractor_name: permit.contractor_name, aptype: permit.aptype, comments: permit.comments }
         : null,
+      open_permit_count: lead.open_permit_count,
       last_roof_contractor_name: lead.last_roof_contractor_name,
       last_roof_contractor_basis: lead.last_roof_contractor_name ? "closed or new-construction roof permit, not the open permit" : null,
     };
   });
   const parcels = rows.map((lead) => `<li>${lead.address}, ${lead.city} · parcel ${lead.prclid}</li>`).join("");
   const sources = (open) => `<details class="sources"${open ? " open" : ""}><summary>Sources and limits</summary><ul>${parcels}</ul>${CITATIONS.map((text) => `<p>${text}</p>`).join("")}</details>`;
-  const box = document.getElementById("answer");
-  const send = document.querySelector("#ask-form .send");
-  send.disabled = true;
   box.innerHTML = `<div class="response thinking"><span class="spark"></span><div><p class="response-body">Reading ${result.leads.length} matching parcels within ${result.radius} miles of ${result.city}…</p></div></div>`;
   try {
     const response = await fetch("/api/ask", {
@@ -286,18 +355,18 @@ document.getElementById("question").addEventListener("keydown", (event) => {
   }
 });
 
-Promise.all([loadJson("summary.json"), loadJson("leads.json"), loadJson("permits.json"), loadJson("manifest.json").catch(() => null)])
-  .then(([summary, leads, permits, manifest]) => {
+Promise.all([loadJson("summary.json"), loadTileIndex(), loadJson("manifest.json").catch(() => null)])
+  .then(([summary, _index, manifest]) => {
     state.summary = summary;
-    state.leads = leads;
-    state.permits = permits;
     state.published = { manifest_cid: PUBLISHED.manifest_cid, delta_cid: PUBLISHED.delta_cid, manifest, gateway_checks: [] };
-    document.getElementById("status").textContent = `${leads.length.toLocaleString()} lead parcels · published on IPFS`;
+    const totals = tileTotals();
+    document.getElementById("status").textContent = `${totals.parcels.toLocaleString()} parcels · published on IPFS`;
     renderSummary();
-    renderPermits();
-    const initial = search(39.739072, -75.539787, 5, 15, false);
-    draw(initial, 39.739072, -75.539787, 5);
-    renderSearch(initial);
+    runSearch(39.739072, -75.539787, 5, 15, false);
+    return loadJson("open_permits.json").then((permits) => {
+      state.openPermits = permits;
+      renderPermits();
+    });
   })
   .catch((error) => {
     document.getElementById("status").textContent = `Could not load data: ${error.message}`;

@@ -471,11 +471,116 @@ def export(directory: Path) -> dict:
             """
         )
     )
+    open_permits = _rows(
+        connection.execute(
+            """
+            SELECT p.prclid, l.address, l.city, l.lat, l.lon, p.apno, p.aptype,
+                   CAST(CAST(p.issued_at AS DATE) AS VARCHAR) AS issued_on, p.days_open, p.is_roof,
+                   p.comments, p.contractor_name
+            FROM permit_detail p
+            LEFT JOIN lead_property l USING (prclid)
+            WHERE p.permit_status = 'open'
+            ORDER BY p.issued_at DESC NULLS LAST, p.apno
+            """
+        )
+    )
+    tiles = export_tiles(connection, directory / "tiles")
     connection.close()
-    for name, payload in (("summary.json", summary), ("leads.json", leads), ("permits.json", permits)):
+    for name, payload in (
+        ("summary.json", summary),
+        ("leads.json", leads),
+        ("permits.json", permits),
+        ("open_permits.json", open_permits),
+    ):
         indent = 2 if name == "summary.json" else None
         (directory / name).write_text(json.dumps(payload, indent=indent, default=str) + "\n")
-    return {"leads": len(leads), "permits": len(permits), "summary": summary}
+    return {
+        "leads": len(leads),
+        "permits": len(permits),
+        "open_permits": len(open_permits),
+        "tiles": tiles,
+        "summary": summary,
+    }
+
+
+TILE_DEGREES = 0.05
+TILE_KEY_SQL = (
+    "CAST(CAST(floor(l.lat / 0.05) AS INTEGER) AS VARCHAR) || '_' || "
+    "CAST(CAST(floor(l.lon / 0.05) AS INTEGER) AS VARCHAR)"
+)
+LEAD_COLUMNS = [
+    "prclid", "address", "city", "zip", "lat", "lon", "roof_age_years", "roof_age_basis",
+    "year_built", "open_permit_count", "open_roof_permit_count", "newest_open_days",
+    "oldest_open_days", "contractor_name", "owner_out_of_area", "last_roof_contractor_name",
+    "last_roof_contractor_issued_at",
+]
+PERMIT_COLUMNS = [
+    "prclid", "apno", "aptype", "permit_status", "issued_on", "days_open", "is_roof",
+    "comments", "contractor_name",
+]
+
+
+def export_tiles(connection: duckdb.DuckDBPyConnection, directory: Path) -> dict:
+    """Split every parcel, its open permits, and its roof permits into map tiles."""
+    directory.mkdir(parents=True, exist_ok=True)
+    for old in directory.glob("*.json"):
+        old.unlink()
+    leads = connection.execute(
+        f"""
+        WITH open_age AS (
+          SELECT prclid,
+                 date_diff('day', max(issued_at), current_timestamp) AS newest_open_days,
+                 date_diff('day', min(issued_at), current_timestamp) AS oldest_open_days
+          FROM permit_detail
+          WHERE permit_status = 'open'
+          GROUP BY prclid
+        )
+        SELECT {TILE_KEY_SQL} AS tile,
+               l.prclid, trim(regexp_replace(l.address, '\\s+', ' ', 'g')), l.city, l.zip,
+               round(l.lat, 6), round(l.lon, 6), l.roof_age_years, l.roof_age_basis,
+               l.year_built, l.open_permit_count, l.open_roof_permit_count,
+               o.newest_open_days, o.oldest_open_days, l.contractor_name, l.owner_out_of_area,
+               l.last_roof_contractor_name, CAST(l.last_roof_contractor_issued_at AS DATE)
+        FROM lead_property l
+        LEFT JOIN open_age o USING (prclid)
+        WHERE l.lat IS NOT NULL
+        ORDER BY tile, l.prclid
+        """
+    ).fetchall()
+    permits = connection.execute(
+        f"""
+        SELECT {TILE_KEY_SQL} AS tile,
+               p.prclid, p.apno, p.aptype, p.permit_status, CAST(p.issued_at AS DATE),
+               p.days_open, p.is_roof, p.comments, p.contractor_name
+        FROM permit_detail p
+        JOIN lead_property l USING (prclid)
+        WHERE l.lat IS NOT NULL AND (p.permit_status = 'open' OR p.is_roof)
+        ORDER BY tile, p.issued_at DESC NULLS LAST
+        """
+    ).fetchall()
+    grouped: dict[str, dict[str, list]] = {}
+    for row in leads:
+        grouped.setdefault(row[0], {"leads": [], "permits": []})["leads"].append(list(row[1:]))
+    for row in permits:
+        grouped.setdefault(row[0], {"leads": [], "permits": []})["permits"].append(list(row[1:]))
+    index = {}
+    for key, payload in grouped.items():
+        path = directory / f"{key}.json"
+        path.write_text(json.dumps(payload, default=str, separators=(",", ":")))
+        index[key] = {"file": path.name, "parcels": len(payload["leads"]), "permits": len(payload["permits"])}
+    (directory.parent / "tiles_index.json").write_text(
+        json.dumps(
+            {
+                "tile_degrees": TILE_DEGREES,
+                "lead_columns": LEAD_COLUMNS,
+                "permit_columns": PERMIT_COLUMNS,
+                "tiles": index,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    return {"tiles": len(index), "parcels": len(leads), "permits": len(permits)}
 
 
 def main() -> None:

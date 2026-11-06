@@ -185,6 +185,8 @@ details.sources ul { padding-left: 18px; }
 .btn.tonal { background: var(--blue-soft); color: var(--blue-ink); }
 .btn.text { background: transparent; color: var(--blue); }
 .btn:hover { filter: brightness(0.97); }
+.btn.more { display: block; margin: 12px auto 0; }
+.busy { opacity: 0.5; pointer-events: none; transition: opacity 0.2s; }
 
 #gps-status { min-height: 20px; font-size: 12px; }
 
