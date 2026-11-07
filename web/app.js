@@ -240,7 +240,8 @@ function renderPermits() {
 function leadFacts(lead, permit) {
   const facts = [];
   if (lead.roof_age_years != null) {
-    facts.push(`roof about ${lead.roof_age_years} years old, from ${lead.roof_age_basis === "structure.year_built" ? "year built" : "the latest roof permit"}`);
+    const age = lead.roof_age_years === 0 ? "less than a year old" : `about ${lead.roof_age_years} years old`;
+    facts.push(`roof ${age}, from ${lead.roof_age_basis === "structure.year_built" ? "year built" : "the latest roof permit"}`);
   } else {
     facts.push("roof age unknown");
   }
