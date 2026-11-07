@@ -1,0 +1,11 @@
+{
+  "label": "Seed",
+  "relationships": {
+    "property_seed": {
+      "/": "./property_seed_link.json"
+    },
+    "address_has_parcel": {
+      "/": "./address_has_parcel.json"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "source_http_request": {
+    "method": "GET",
+    "url": "https://gis.nccde.org/agsserver/rest/services/BaseMaps/Base_Layers/MapServer/6"
+  },
+  "request_identifier": "0601000028",
+  "parcel_identifier": "0601000028"
+}

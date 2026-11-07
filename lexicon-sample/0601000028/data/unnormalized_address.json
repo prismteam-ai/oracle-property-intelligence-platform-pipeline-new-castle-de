@@ -1,0 +1,9 @@
+{
+  "source_http_request": {
+    "method": "GET",
+    "url": "https://gis.nccde.org/agsserver/rest/services/BaseMaps/Base_Layers/MapServer/6"
+  },
+  "request_identifier": "0601000028",
+  "full_address": "1 BEAVER VALLEY RD, WILMINGTON, DE",
+  "county_jurisdiction": "New Castle"
+}
