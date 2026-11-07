@@ -299,6 +299,9 @@ function propertyLines(rows) {
 }
 
 function composeAnswer(modelText, matchCount, rows) {
+  if (!rows.length) {
+    return `None of the matched parcels fit this question.\nShowing 0 of ${Number(matchCount).toLocaleString()} matched parcels.`;
+  }
   const intro = String(modelText || "")
     .split("\n")
     .filter((line) => {
