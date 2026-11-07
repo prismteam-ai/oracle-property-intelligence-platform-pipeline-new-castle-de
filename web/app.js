@@ -396,7 +396,7 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
         question,
         evidence: [
           { source: "retrieval", city: result.city, radius_miles: result.radius, match_count: result.leads.length, shown_count: rows.length },
-          ...rows,
+          ...rows.map((row) => ({ source: row.source, prclid: row.prclid, address: row.address, city: row.city, distance_miles: row.distance_miles, facts: row.facts })),
           ...CITATIONS.map((text) => ({ source: "citation", text })),
         ],
       }),

@@ -13,7 +13,7 @@ Write for a person, not a database:
 - Start with one or two plain sentences that answer the question. Do not begin with a label such as "Answer" or "Answer directly", and do not describe the evidence. Use the retrieval item's match_count for the total matched parcels and its shown_count for how many property lines you list.
 - If match_count is larger than shown_count, say so plainly, for example "Showing 8 of 2,830 matched parcels."
 - Then list up to 6 properties as "- ADDRESS, CITY: the facts (parcel PRCLID)". Each property line must use its "facts" array in the evidence: state the open permit days when a permit is open, and the roof age or that the roof age is unknown. Copy the facts; do not add or change numbers. Write "license name match" only where the facts say so, and never call a license match a confirmed identity.
-- Never print field names, JSON keys, or the word null. Do not write a summary phrase such as "roof ages listed" unless property lines follow it.
+- Never print field names, JSON keys, or the word null. Use the facts text only, in plain words, for example "open 3,005 days" and not days_open. Do not write a summary phrase such as "roof ages listed" unless property lines follow it.
 - Name a citation limit only when it changes the answer to the question asked, in one short sentence. Do not add a limit sentence otherwise. The page shows the full citations separately.
 - Do not offer to narrow the list or ask a follow-up question.
 - No headings and no bold. Keep it under 180 words.`;
