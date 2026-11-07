@@ -15,7 +15,7 @@ const BASIS = {
 const PAGE = 200;
 const state = {
   leads: [], byParcel: new Map(), openPermits: [], summary: null, published: null, map: null, layer: null,
-  results: [], resultLimit: PAGE, permitLimit: PAGE, permitRoofOnly: false, runId: 0,
+  results: [], resultLimit: PAGE, permitLimit: PAGE, permitRoofOnly: false, permitSort: { key: null, dir: -1 }, runId: 0,
 };
 
 function miles(lat1, lon1, lat2, lon2) {
@@ -167,8 +167,48 @@ function renderSearch() {
     : `<p class="empty">No properties match. Try a larger radius or a lower roof age.</p>`;
 }
 
+function compareValues(a, b, dir) {
+  const empty = (value) => value == null || value === "" || (typeof value === "number" && !Number.isFinite(value));
+  if (empty(a) && empty(b)) return 0;
+  if (empty(a)) return 1;
+  if (empty(b)) return -1;
+  const diff = typeof a === "number" && typeof b === "number"
+    ? a - b
+    : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+  return diff * dir;
+}
+
+function permitOrderPhrase() {
+  if (!state.permitSort.key) return "longest open first";
+  const text = state.permitSort.key !== "days";
+  const way = text
+    ? (state.permitSort.dir < 0 ? "Z to A" : "A to Z")
+    : (state.permitSort.dir < 0 ? "high to low" : "low to high");
+  const label = { days: "days open", property: "address", permit: "issue date", work: "work", contractor: "contractor" }[state.permitSort.key];
+  return `by ${label}, ${way}`;
+}
+
+function permitHeader(label, key) {
+  const on = state.permitSort.key === key;
+  const mark = on ? (state.permitSort.dir < 0 ? " ↓" : " ↑") : "";
+  return `<th><button type="button" class="sort${on ? " on" : ""}" data-sort="${key}" aria-sort="${on ? (state.permitSort.dir < 0 ? "descending" : "ascending") : "none"}">${label}${mark}</button></th>`;
+}
+
+function sortedPermits(list) {
+  const { key, dir } = state.permitSort;
+  if (!key) return list;
+  const value = {
+    days: (permit) => permit.days_open,
+    property: (permit) => permit.address || permit.prclid,
+    permit: (permit) => permit.issued_on,
+    work: (permit) => permit.comments,
+    contractor: (permit) => permit.contractor_name,
+  }[key];
+  return [...list].sort((a, b) => compareValues(value(a), value(b), dir));
+}
+
 function renderPermits() {
-  const open = state.permitRoofOnly ? state.openPermits.filter((permit) => permit.is_roof) : state.openPermits;
+  const open = sortedPermits(state.permitRoofOnly ? state.openPermits.filter((permit) => permit.is_roof) : state.openPermits);
   const shown = Math.min(state.permitLimit, open.length);
   const rows = open.slice(0, shown).map((permit) => `<tr>
       <td><span class="since">${permit.days_open?.toLocaleString() ?? "?"} days</span></td>
@@ -179,9 +219,9 @@ function renderPermits() {
       <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
     </tr>`).join("");
   const roof = state.openPermits.filter((permit) => permit.is_roof).length;
-  document.getElementById("permits").innerHTML = `<div class="toolbar"><p>${open.length.toLocaleString()} ${state.permitRoofOnly ? "open roof permits" : `open permits in the county, ${roof.toLocaleString()} of them for roof work`}, longest open first · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
+  document.getElementById("permits").innerHTML = `<div class="toolbar"><p>${open.length.toLocaleString()} ${state.permitRoofOnly ? "open roof permits" : `open permits in the county, ${roof.toLocaleString()} of them for roof work`}, ${permitOrderPhrase()} · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
     <button type="button" class="btn tonal" data-roof-toggle>${state.permitRoofOnly ? "Show all open permits" : "Roof work only"}</button></div>
-    <table><thead><tr><th>Open</th><th>Property</th><th>Permit</th><th>Work</th><th>Contractor on open permit</th><th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
+    <table><thead><tr>${permitHeader("Open", "days")}${permitHeader("Property", "property")}${permitHeader("Permit", "permit")}${permitHeader("Work", "work")}${permitHeader("Contractor on open permit", "contractor")}<th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
 }
 
 async function answer(question) {
@@ -227,6 +267,16 @@ async function runSearch(lat, lon, radius, minAge, openOnly) {
 }
 
 document.addEventListener("click", (event) => {
+  const sort = event.target.closest("#permits [data-sort]");
+  if (sort) {
+    const key = sort.dataset.sort;
+    state.permitSort = state.permitSort.key === key
+      ? { key, dir: state.permitSort.dir * -1 }
+      : { key, dir: key === "days" ? -1 : 1 };
+    state.permitLimit = PAGE;
+    renderPermits();
+    return;
+  }
   if (event.target.closest("[data-roof-toggle]")) {
     state.permitRoofOnly = !state.permitRoofOnly;
     state.permitLimit = PAGE;

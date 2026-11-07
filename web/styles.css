@@ -197,6 +197,9 @@ details.sources ul { padding-left: 18px; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+th .sort { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+th .sort.on { color: var(--ink); }
+th .sort:hover { color: var(--blue); }
 td { padding: 12px; border-bottom: 1px solid #f1f3f4; vertical-align: middle; }
 tbody tr { cursor: pointer; }
 tbody tr:hover { background: var(--hover); }
