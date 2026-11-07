@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = Path(os.environ.get("NEW_CASTLE_DUCKDB", ROOT / "data" / "duckdb" / "newcastle.duckdb"))
 
 LIMITATIONS = [
-    "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest roof-work permit: a replacement, re-roof, repair, tear-off, shingle, or sheathing job in the permit description. Porch roofs, patio covers, solar mounts, and later revision notes do not count. Parcels with neither have no roof age.",
+    "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest closed roof-work permit: a replacement, re-roof, repair, tear-off, shingle, or sheathing job in the permit description. An open permit does not set the roof age. Porch roofs, patio covers, solar mounts, and later revision notes do not count. Parcels with neither have no roof age.",
     "Open duration is days since the issue timestamp on an open permit layer. The GIS layers do not publish a close date.",
     "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). license_* fields come from a name match: the permit name, after case and punctuation normalization, equals a business or trade name on the Delaware business contractor licenses (SODA 5zy2-grhr: resident, non-resident, and construction manager). A match shows that a licensed name exists. It does not confirm that the permit contractor is that licensee or that the license class covers the permitted work. license_status is active when the license valid-to date is on or after the query date. Electrical, plumbing, and HVACR trade licenses (pjnv-eaih) belong to people, so they are not matched to company names. HOMEOWNER PERMIT is a placeholder and is never matched. The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
     "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
@@ -137,8 +137,13 @@ SELECT
   count(*) FILTER (WHERE is_roof) AS roof_permit_count,
   min(issued_at) FILTER (WHERE permit_status = 'open' AND is_roof) AS oldest_open_roof_permit_issued_at,
   max(issued_at) FILTER (WHERE is_roof) AS latest_roof_permit_issued_at,
-  arg_max(contractor_name, issued_at) FILTER (WHERE is_roof AND contractor_name IS NOT NULL) AS last_roof_contractor_name,
-  max(issued_at) FILTER (WHERE is_roof AND contractor_name IS NOT NULL) AS last_roof_contractor_issued_at
+  max(issued_at) FILTER (WHERE is_roof AND permit_status <> 'open') AS latest_closed_roof_permit_issued_at,
+  arg_max(contractor_name, issued_at) FILTER (
+    WHERE is_roof AND permit_status <> 'open' AND contractor_name IS NOT NULL
+  ) AS last_roof_contractor_name,
+  max(issued_at) FILTER (
+    WHERE is_roof AND permit_status <> 'open' AND contractor_name IS NOT NULL
+  ) AS last_roof_contractor_issued_at
 FROM permit_detail
 GROUP BY prclid;
 
@@ -165,11 +170,11 @@ SELECT
   b.remodel_year,
   b.roof_type,
   b.roof_material,
-  coalesce(b.year_built, year(r.latest_roof_permit_issued_at)) AS roof_year,
-  year(current_date) - coalesce(b.year_built, year(r.latest_roof_permit_issued_at)) AS roof_age_years,
+  coalesce(b.year_built, year(r.latest_closed_roof_permit_issued_at)) AS roof_year,
+  year(current_date) - coalesce(b.year_built, year(r.latest_closed_roof_permit_issued_at)) AS roof_age_years,
   CASE
     WHEN b.year_built IS NOT NULL THEN 'structure.year_built'
-    WHEN r.latest_roof_permit_issued_at IS NOT NULL THEN 'latest_roof_permit'
+    WHEN r.latest_closed_roof_permit_issued_at IS NOT NULL THEN 'latest_closed_roof_permit'
   END AS roof_age_basis,
   b.open_permit_count,
   coalesce(r.open_roof_permit_count, 0) AS open_roof_permit_count,

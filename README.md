@@ -2,7 +2,7 @@
 
 Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
 
-The page loads the full published set: 203,855 parcels with coordinates and 461,258 permit rows. Manifest CID `bafybeidzd6xhwrkmt6jwj5n2w4rsnd7355mjnnipysg6cmlipkpxuujvve`. It follows prior manifest `bafybeigzaxey4agd4ble5b555vrcckx7hh3ny4zuiiizijp2r3xpkklshm`. The summary and the manifest matched on `ipfs.filebase.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429.
+The page loads the full published set: 203,855 parcels with coordinates and 461,258 permit rows. Manifest CID `bafybeidtxmv2n6ihzalg4wbvcbk2aimuwi57bhiorjag6ctznopihajbh4`. It follows prior manifest `bafybeidzd6xhwrkmt6jwj5n2w4rsnd7355mjnnipysg6cmlipkpxuujvve`. The CAR digest matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. The summary and the manifest matched on `ipfs.filebase.io`. A pin through the public `ipfs.io` add API was refused.
 
 ## Context
 
@@ -130,7 +130,7 @@ node bin/elephant-county.mjs permit-probe --county new-castle
 
 `pipeline/query_layer.py` installs views on the existing DuckDB file. `pipeline/mcp_server.py` reads those views. That server is the internal query path. `@elephant-xyz/mcp` is the public path after an Atlas lexicon archive exists. GitHub `elephant-cli` main reports 1.58.1 and includes `export-tables`. `validate` finds no files until a New Castle lexicon property group exists, so that command was not used to publish the query JSON.
 
-`pipeline/publish_ipfs.py` packs the query JSON with `ipfs-car@3` and uploads it to Filebase. Delaware contractor licenses are the SODA pulls in `data/soda/`. BBB was not submitted because `www.bbb.org/robots.txt` disallows category pages.
+`pipeline/load_sources.py files` loads the local owner CSV and parcel-point shapefile. `pipeline/load_sources.py assemble` rebuilds the parcel table from those tables plus the GIS rows in `county_record`. `pipeline/query_layer.py export` writes the published JSON, and `pipeline/publish_ipfs.py` packs it with `ipfs-car@3` and uploads it to Filebase. The same summary bytes are also pinned through the public `ipfs.io` API when that node accepts the add. Delaware contractor licenses are the SODA pulls in `data/soda/`. BBB was not submitted because `www.bbb.org/robots.txt` disallows category pages. `node pipeline/kit_permit_smoke.mjs` reads the open-permit count through the kit ArcGIS adapter. Atlas publication stays blocked because the lexicon county enum has no New Castle value.
 
 ## Reference
 - [Roofing CRM & Lead Identification UI](https://github.com/prismteam-ai/roofing-crm)

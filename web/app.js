@@ -10,6 +10,7 @@ const CITIES = {
 const BASIS = {
   "structure.year_built": "from year built",
   latest_roof_permit: "from last roof permit",
+  latest_closed_roof_permit: "from last closed roof permit",
 };
 
 const PAGE = 200;
@@ -29,14 +30,14 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeidzd6xhwrkmt6jwj5n2w4rsnd7355mjnnipysg6cmlipkpxuujvve",
-  delta_cid: "bafybeibdiwmpydwqy5mujzlxifsu45eu3slusd3bwv42nmkdaowupj7cle",
+  manifest_cid: "bafybeidtxmv2n6ihzalg4wbvcbk2aimuwi57bhiorjag6ctznopihajbh4",
+  delta_cid: "bafybeidhwzwmsrdolxevjqekxirqkxhkqyvxvxlzl5qqni5yem2ewohtoe",
 };
 
 const IPFS = {
-  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeibjpmqu7s5lj4xpilu3yuye26j6nd5zrmamkvv7ijlidzbmlddk5m",
-  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeihw5g56twmdqkk2c2brwnseo3tlvdepkvheewle6kuhjdm7jaos6i",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeifoqcp3xzsslb6w2p2woklnr5tv5axsp2jgploqvlgpunrzxvpwqa",
+  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeicgtyxrgnidgxi3pmsice6iyn5jbos5mgd3bb42wsiifli6wosf74",
+  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeicaw253lomfu7vlicblcyv7umm77qzuq6rfuc32cans3jfmauxgti",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeibk56xh4ufveqnrpzbyd34mvcojafs2kvwv7773bkggh72xswvd2m",
   "open_permits.json": "https://ipfs.filebase.io/ipfs/bafybeiakvuhkm6xqji3ijsvdw2emcno74rldb3sn3iwqtknuoyll5c4ikq",
   "tiles_index.json": GATEWAY + TILE_INDEX_CID,
   "manifest.json": `https://ipfs.filebase.io/ipfs/${PUBLISHED.manifest_cid}`,
@@ -85,7 +86,7 @@ function renderSummary() {
       <p>Files: ${["summary.json", "leads.json", "permits.json", "open_permits.json", "tiles_index.json"].map((name) => `<a href="${IPFS[name]}" target="_blank" rel="noopener">${name}</a>`).join(" · ")}</p>
       ${manifest}
       ${checks ? `<details class="sources"><summary>Gateway readback checks</summary><ul>${checks}</ul></details>` : ""}
-      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor. ${Number(s.permit_rows_with_license_match ?? 0).toLocaleString()} of ${Number(s.permit_rows_with_contractor ?? 0).toLocaleString()} permit rows with a printed contractor name match a Delaware business contractor license name. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
+      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest closed roof-permit year. An open permit does not set the roof age. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest closed roof-work permit prints a name. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor. ${Number(s.permit_rows_with_license_match ?? 0).toLocaleString()} of ${Number(s.permit_rows_with_contractor ?? 0).toLocaleString()} permit rows with a printed contractor name match a Delaware business contractor license name. ${gatewaySentence(pub?.gateway_checks)}</p>
     </div>`;
 }
 
@@ -237,14 +238,40 @@ function renderPermits() {
     <table><thead><tr>${permitHeader("Open", "days")}${permitHeader("Property", "property")}${permitHeader("Permit", "permit")}${permitHeader("Work", "work")}${permitHeader("Contractor on open permit", "contractor")}<th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
 }
 
-function leadFacts(lead, permit) {
-  const facts = [];
-  if (lead.roof_age_years != null) {
-    const age = lead.roof_age_years === 0 ? "less than a year old" : `about ${lead.roof_age_years} years old`;
-    facts.push(`roof ${age}, from ${lead.roof_age_basis === "structure.year_built" ? "year built" : "the latest roof permit"}`);
-  } else {
-    facts.push("roof age unknown");
+function gatewaySentence(checks) {
+  const hosts = [...new Set((checks || []).filter((check) => check.match).map((check) => {
+    try { return new URL(check.url).host; } catch { return check.url; }
+  }))];
+  if (!hosts.length) return "No gateway returned a matching digest on this run.";
+  return `The digest matched on ${hosts.join(", ")}.`;
+}
+
+function ageWords(years) {
+  return years === 0 ? "less than a year old" : `about ${years} years old`;
+}
+
+function openedWords(permit) {
+  const years = Math.floor(Number(permit.days_open ?? 0) / 365.25);
+  return years === 0 ? "this year" : `${years} years ago`;
+}
+
+function roofAgeFact(lead, permit) {
+  const closed = lead.roof_age_basis === "latest_closed_roof_permit" || lead.roof_age_basis === "structure.year_built";
+  if (closed && lead.roof_age_years != null) {
+    const from = lead.roof_age_basis === "structure.year_built" ? "year built" : "the latest closed roof permit";
+    return `roof ${ageWords(lead.roof_age_years)}, from ${from}`;
   }
+  if (permit?.is_roof) {
+    return `roof permit opened ${openedWords(permit)}; roof age is not known from year built or a closed roof permit`;
+  }
+  if (lead.roof_age_years != null) {
+    return `roof ${ageWords(lead.roof_age_years)}, from the latest closed roof permit`;
+  }
+  return "roof age unknown";
+}
+
+function leadFacts(lead, permit) {
+  const facts = [roofAgeFact(lead, permit)];
   if (permit) {
     facts.push(`${permit.is_roof ? "roof" : permit.aptype || "other"} permit open ${Number(permit.days_open ?? 0).toLocaleString()} days`);
     facts.push(permit.contractor_name
@@ -257,6 +284,32 @@ function leadFacts(lead, permit) {
   return facts;
 }
 
+function asksForNamedContractor(text) {
+  return /name a contractor|names a contractor|who is the|listed contractor/.test(text);
+}
+
+function chosenOpen(lead, byParcel, roof) {
+  const open = (byParcel.get(lead.prclid) || []).filter((item) => item.permit_status === "open");
+  if (roof) return open.find((item) => item.is_roof) || null;
+  return open.find((item) => item.is_roof) || open[0] || null;
+}
+
+function propertyLines(rows) {
+  return rows.map((row) => `- ${String(row.address).replace(/\s+/g, " ")}, ${row.city}: ${row.facts.join("; ")} (parcel ${row.prclid})`).join("\n");
+}
+
+function composeAnswer(modelText, matchCount, rows) {
+  const intro = String(modelText || "")
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith("-") && !/^showing\b/i.test(trimmed);
+    })
+    .join(" ")
+    .trim();
+  return `${intro}\nShowing ${rows.length} of ${Number(matchCount).toLocaleString()} matched parcels.\n${propertyLines(rows)}`;
+}
+
 async function answer(question) {
   const text = question.toLowerCase();
   const city = Object.keys(CITIES).find((name) => text.includes(name)) || "wilmington";
@@ -264,10 +317,17 @@ async function answer(question) {
   const radius = Number((text.match(/(\d+(?:\.\d+)?)\s*mile/) || [0, 5])[1]);
   const age = Number((text.match(/older than\s+(\d+)/) || text.match(/(\d+)\s*years/) || [0, 15])[1]);
   const openOnly = text.includes("permit") || text.includes("contractor");
+  const roof = text.includes("roof");
+  const named = asksForNamedContractor(text);
   const area = await loadArea(lat, lon, radius);
-  const leads = search(lat, lon, radius, openOnly ? null : age, openOnly, area.leads);
-  const shown = openOnly ? leads.sort((a, b) => (b.oldest_open_days || 0) - (a.oldest_open_days || 0)) : leads;
-  return { city, lat, lon, radius, age, openOnly, leads: shown, byParcel: area.byParcel };
+  let leads = search(lat, lon, radius, openOnly ? null : age, openOnly, area.leads);
+  const population = leads.length;
+  if (named) {
+    leads = leads.filter((lead) => chosenOpen(lead, area.byParcel, roof || openOnly)?.contractor_name);
+  }
+  const days = (lead) => chosenOpen(lead, area.byParcel, roof)?.days_open ?? lead.oldest_open_days ?? -1;
+  leads.sort((a, b) => (openOnly ? days(b) - days(a) : a.distance_miles - b.distance_miles));
+  return { city, lat, lon, radius, age, openOnly, roof, leads, population, byParcel: area.byParcel };
 }
 
 async function runSearch(lat, lon, radius, minAge, openOnly) {
@@ -396,7 +456,7 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
       body: JSON.stringify({
         question,
         evidence: [
-          { source: "retrieval", city: result.city, radius_miles: result.radius, match_count: result.leads.length, shown_count: rows.length },
+          { source: "retrieval", city: result.city, radius_miles: result.radius, match_count: result.population, shown_count: rows.length, named_contractor_only: asksForNamedContractor(question.toLowerCase()) },
           ...rows.map((row) => ({ source: row.source, prclid: row.prclid, address: row.address, city: row.city, distance_miles: row.distance_miles, facts: row.facts.join("; ") })),
           ...CITATIONS.map((text) => ({ source: "citation", text })),
         ],
@@ -404,10 +464,10 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "The model request failed.");
-    const text = escapeHtml(payload.answer).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    const text = escapeHtml(composeAnswer(payload.answer, result.population, rows)).replace(/\n/g, "<br>");
     box.innerHTML = `<div class="response"><span class="spark"></span><div>
       <p class="response-body">${text}</p>
-      <p class="response-meta">Answered from ${result.leads.length} published parcels within ${result.radius} miles of ${result.city} · ${payload.model}</p>
+      <p class="response-meta">Answered from ${result.population} published parcels within ${result.radius} miles of ${result.city}; the page lists ${rows.length} · ${payload.model}</p>
       ${sources(false)}</div></div>`;
   } catch (error) {
     box.innerHTML = `<div class="response"><span class="spark"></span><div>

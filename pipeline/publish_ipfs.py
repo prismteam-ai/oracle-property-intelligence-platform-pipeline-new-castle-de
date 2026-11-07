@@ -20,7 +20,9 @@ import shutil
 import ssl
 import subprocess
 import tempfile
+import time
 import urllib.request
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,16 +98,72 @@ def upload(s3, bucket: str, key: str, body: bytes, content_type: str) -> dict:
     }
 
 
-def fetch_gateway(url: str) -> dict:
+def fetch_once(url: str) -> dict:
     context = ssl.create_default_context(cafile="/etc/ssl/cert.pem")
     request = urllib.request.Request(url, headers={"User-Agent": "newcastle-oracle/1"})
     try:
-        with urllib.request.urlopen(request, timeout=20, context=context) as response:
+        with urllib.request.urlopen(request, timeout=25, context=context) as response:
             body = response.read()
             return {"url": url, "status": response.status, "size": len(body), "sha256": hashlib.sha256(body).hexdigest()}
     except Exception as error:
         status = getattr(error, "code", None)
         return {"url": url, "status": status, "error": type(error).__name__}
+
+
+def fetch_gateway(url: str, attempts: int = 4) -> dict:
+    """Read a CID back. Retry 429 and 5xx with backoff so a busy gateway can still prove the digest."""
+    delay = 2
+    last = {"url": url, "status": None, "error": "not-tried"}
+    for attempt in range(attempts):
+        last = fetch_once(url)
+        last["attempt"] = attempt + 1
+        status = last.get("status")
+        if last.get("sha256"):
+            return last
+        if status not in (None, 429, 500, 502, 503, 504):
+            return last
+        if attempt + 1 < attempts:
+            time.sleep(delay)
+            delay *= 2
+    return last
+
+
+def pin_second_provider(body: bytes, filename: str) -> dict:
+    """Pin the same bytes on a public IPFS node, then record whether that node serves the digest.
+
+    Filebase remains the primary pin. This is the independent copy. A refusal is recorded
+    and is not treated as a matching digest.
+    """
+    boundary = uuid.uuid4().hex
+    payload = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+        "Content-Type: application/json\r\n\r\n"
+    ).encode() + body + f"\r\n--{boundary}--\r\n".encode()
+    url = "https://ipfs.io/api/v0/add?cid-version=1&pin=true"
+    request = urllib.request.Request(
+        url,
+        data=payload,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}", "User-Agent": "newcastle-oracle/1"},
+        method="POST",
+    )
+    context = ssl.create_default_context(cafile="/etc/ssl/cert.pem")
+    expected = hashlib.sha256(body).hexdigest()
+    try:
+        with urllib.request.urlopen(request, timeout=60, context=context) as response:
+            raw = response.read().decode()
+            cid = json.loads(raw.splitlines()[-1])["Hash"]
+    except Exception as error:
+        return {"provider": "ipfs.io", "pinned": False, "error": type(error).__name__, "sha256": expected}
+    readback = fetch_gateway("https://ipfs.io/ipfs/" + cid, attempts=3)
+    return {
+        "provider": "ipfs.io",
+        "pinned": True,
+        "cid": cid,
+        "sha256": expected,
+        "readback_match": readback.get("sha256") == expected,
+        "readback_status": readback.get("status"),
+    }
 
 
 def main() -> None:
@@ -148,6 +206,8 @@ def main() -> None:
     print("tiles_index.json", artifacts[-1]["cid"])
 
     current_counts = {k: v for k, v in json.loads((DATA / "summary.json").read_text()).items() if isinstance(v, (int, float))}
+    second_pin = pin_second_provider((DATA / "summary.json").read_bytes(), "summary.json")
+    print("second pin", second_pin.get("provider"), second_pin.get("pinned"), second_pin.get("readback_match"), second_pin.get("error"))
     manifest = {
         "run_id": run_id,
         "county": "New Castle County, DE",
@@ -156,10 +216,11 @@ def main() -> None:
         "car": car_artifact,
         "prior_cids": prior_cids,
         "counts": current_counts,
+        "second_pin": second_pin,
         "limitations": [
             "The published files are every parcel with coordinates and every permit row.",
             "tiles_index.json lists 0.05-degree map tiles. Each tile holds every parcel in it plus its open and roof permits.",
-            "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
+            "Roof age is year built when the county filled it, otherwise the latest closed roof-permit year. An open permit does not set the roof age.",
             "Open duration is days since issue on an open permit layer. No close date is published.",
             "Contractor name is the text on the permit. The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. license_* fields are an exact name match to the Delaware business contractor licenses (SODA 5zy2-grhr). A match is a name match and does not confirm the permit contractor is that licensee. Trade licenses (pjnv-eaih) belong to people and are not matched.",
             "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
