@@ -30,7 +30,7 @@ server = MCPServer(
         "Roof age is missing for most parcels. Sale history is not loaded. "
         "BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. "
         "last_roof_contractor_name is the name on the latest closed or new-construction roof permit. "
-        "The open-permit layer has no contractor field. "
+        "The open-permit layer prints a contractor on only a few rows. "
         "This server is not @elephant-xyz/mcp. "
         + " ".join(LIMITATIONS)
     ),

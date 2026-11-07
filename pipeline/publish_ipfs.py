@@ -161,7 +161,7 @@ def main() -> None:
             "tiles_index.json lists 0.05-degree map tiles. Each tile holds every parcel in it plus its open and roof permits.",
             "Roof age is year built when the county filled it, otherwise the latest roof-permit year.",
             "Open duration is days since issue on an open permit layer. No close date is published.",
-            "Contractor name is the text on the permit. The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",
+            "Contractor name is the text on the permit. The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the name on the latest closed or new-construction roof permit. Delaware SODA datasets 5zy2-grhr and pjnv-eaih were read. The lexicon has no license class, so they are not matched to a permit name.",
             "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
             "Ownership unchanged for 10 years cannot be answered. Sale history is not in the GIS layers.",
         ],

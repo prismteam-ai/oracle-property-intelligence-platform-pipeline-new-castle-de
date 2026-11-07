@@ -7,7 +7,7 @@ def test_summary_names_both_contractor_counts():
     assert summary["source"] == "published-json"
     assert "with_contractor_name" not in coverage
     assert coverage["with_any_permit_contractor"] > coverage["with_last_roof_contractor"] > 0
-    assert "open-permit layer has no contractor field" in coverage["contractor_count_note"]
+    assert "open-permit layer prints a contractor on only a few rows" in coverage["contractor_count_note"]
 
 
 def test_radius_search_reads_published_leads():

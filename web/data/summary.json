@@ -8,5 +8,5 @@
   "out_of_area_owner": 10542,
   "with_any_permit_contractor": 113046,
   "with_last_roof_contractor": 2444,
-  "contractor_count_note": "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor."
+  "contractor_count_note": "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor."
 }

@@ -19,7 +19,7 @@ DB_PATH = ROOT / "data" / "duckdb" / "newcastle.duckdb"
 LIMITATIONS = [
     "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest roof-work permit: a replacement, re-roof, repair, tear-off, shingle, or sheathing job in the permit description. Porch roofs, patio covers, solar mounts, and later revision notes do not count. Parcels with neither have no roof age.",
     "Open duration is days since the issue timestamp on an open permit layer. The GIS layers do not publish a close date.",
-    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). Delaware contractor business licenses were read through SODA dataset 5zy2-grhr, and electrical, plumbing, and HVACR licenses through pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name. The open-permit layer has no contractor field, so open permits name a contractor only in the two rows where the county printed one. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
+    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). Delaware contractor business licenses were read through SODA dataset 5zy2-grhr, and electrical, plumbing, and HVACR licenses through pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name. The open-permit layer prints a contractor on only a few rows, so open permits name a contractor only in the two rows where the county printed one. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
     "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
     "Ownership unchanged for 10 years cannot be answered. Sale and deed history are on www3.newcastlede.gov/parcel/Details/. That host's robots.txt is Disallow: / except listed search pages, so the Details path is disallowed. The page also serves a bot challenge, which this pipeline does not bypass. The GIS layers have no sale date.",
     "gis.nccde.org publishes no robots.txt. Parcel, structure, address, unit, permit, appeal, and rollback layers were read from that host.",
@@ -237,7 +237,7 @@ def source_summary() -> dict:
     row["contractor_count_note"] = (
         "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. "
         "with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, "
-        "from the closed and new-construction layers. The open-permit layer has no contractor field, "
+        "from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, "
         "so neither count is an open-permit contractor."
     )
     return {

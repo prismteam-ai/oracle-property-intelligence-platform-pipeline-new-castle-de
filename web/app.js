@@ -29,14 +29,14 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeibq2gg77nf6sthvpissah656yr6aoqgqptbxvsaw5abvw2k6yomh4",
-  delta_cid: "bafybeiaio3gkbqtm6x6ua3s4obkwn7nwq74xsh5jksq2hl6dwxfdpmn2ci",
+  manifest_cid: "bafybeigzaxey4agd4ble5b555vrcckx7hh3ny4zuiiizijp2r3xpkklshm",
+  delta_cid: "bafybeicpymmxwfvseccrt7uy3ebujia4c77joz6edmgs5bcmekfk5ikclu",
 };
 
 const IPFS = {
-  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeihtldyxm2remb7boip3e7w6tvfllpxg2nazuectwhyyxzefzcjibe",
+  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeiapsu2hrqxkeb3igyeyfgyeddzlds422mfpko6yyfq5k66luc7chm",
   "leads.json": "https://ipfs.filebase.io/ipfs/bafybeidafqokwa2xgpnsxps4pty72gidlimxbfwe4ehzajodpeg24prw4i",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeigusdsrma6mhxhopk2aiyonw3q22et44rk674lald6qjldr5mdylq",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeidbqpmxt4h7mg4wdgyzipjnkllollx63gfhtta7utmn7wwurs2wmu",
   "open_permits.json": "https://ipfs.filebase.io/ipfs/bafybeieqlv2hj6xxg3bxhgbjfkdgywhe3m4guyp4upfbybaaomg5gi7ngm",
   "tiles_index.json": GATEWAY + TILE_INDEX_CID,
   "manifest.json": `https://ipfs.filebase.io/ipfs/${PUBLISHED.manifest_cid}`,
@@ -85,7 +85,7 @@ function renderSummary() {
       <p>Files: ${["summary.json", "leads.json", "permits.json", "open_permits.json", "tiles_index.json"].map((name) => `<a href="${IPFS[name]}" target="_blank" rel="noopener">${name}</a>`).join(" · ")}</p>
       ${manifest}
       ${checks ? `<details class="sources"><summary>Gateway readback checks</summary><ul>${checks}</ul></details>` : ""}
-      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer has no contractor field, so neither count is an open-permit contractor. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
+      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
     </div>`;
 }
 
@@ -262,7 +262,7 @@ const CITATIONS = [
   "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
   "Delaware contractor business licenses were read through SODA dataset 5zy2-grhr. Electrical, plumbing, and HVACR licenses were read through SODA dataset pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name.",
   "Sale history is not available. www3.newcastlede.gov/robots.txt disallows /parcel/Details/, so a 10-year ownership question cannot be answered.",
-  "The open-permit layer has no contractor field. last_roof_contractor_name is the name on the latest closed or new-construction roof permit.",
+  "The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the name on the latest closed or new-construction roof permit.",
 ];
 
 document.getElementById("ask-form").addEventListener("submit", async (event) => {

@@ -79,7 +79,7 @@ node bin/elephant-county.mjs permit-probe --county new-castle
 
 A bounded harvest is `permit-bounded-harvest`. It needs a property parquet and a `--limit`. It does not replace the appraisal transform. DuckDB at `data/duckdb/newcastle.duckdb` is the earlier load. `pipeline/query_layer.py` installs the query views on that file and exports the hosted JSON. `pipeline/mcp_server.py` reads that JSON. It is not `@elephant-xyz/mcp`.
 
-`with_any_permit_contractor` is parcels whose latest permit of any type prints a name. On this export that count is 113,046. `with_last_roof_contractor` is parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. On this export that count is 2,444. The open-permit layer has no contractor field. Two of the 117 open roof permits print a name.
+`with_any_permit_contractor` is parcels whose latest permit of any type prints a name. On this export that count is 113,046. `with_last_roof_contractor` is parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. On this export that count is 2,444. The open-permit layer prints a contractor on only a few rows. Two of the 117 open roof permits print a name.
 
 Filebase publication of the query JSON, packed with `ipfs-car@3`, is `pipeline/publish_ipfs.py`. That CAR is the query snapshot. It is not an `elephant-cli export-tables` archive.
 
