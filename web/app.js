@@ -29,15 +29,15 @@ function miles(lat1, lon1, lat2, lon2) {
 }
 
 const PUBLISHED = {
-  manifest_cid: "bafybeigzaxey4agd4ble5b555vrcckx7hh3ny4zuiiizijp2r3xpkklshm",
-  delta_cid: "bafybeicpymmxwfvseccrt7uy3ebujia4c77joz6edmgs5bcmekfk5ikclu",
+  manifest_cid: "bafybeidzd6xhwrkmt6jwj5n2w4rsnd7355mjnnipysg6cmlipkpxuujvve",
+  delta_cid: "bafybeibdiwmpydwqy5mujzlxifsu45eu3slusd3bwv42nmkdaowupj7cle",
 };
 
 const IPFS = {
-  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeiapsu2hrqxkeb3igyeyfgyeddzlds422mfpko6yyfq5k66luc7chm",
-  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeidafqokwa2xgpnsxps4pty72gidlimxbfwe4ehzajodpeg24prw4i",
-  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeidbqpmxt4h7mg4wdgyzipjnkllollx63gfhtta7utmn7wwurs2wmu",
-  "open_permits.json": "https://ipfs.filebase.io/ipfs/bafybeieqlv2hj6xxg3bxhgbjfkdgywhe3m4guyp4upfbybaaomg5gi7ngm",
+  "summary.json": "https://ipfs.filebase.io/ipfs/bafybeibjpmqu7s5lj4xpilu3yuye26j6nd5zrmamkvv7ijlidzbmlddk5m",
+  "leads.json": "https://ipfs.filebase.io/ipfs/bafybeihw5g56twmdqkk2c2brwnseo3tlvdepkvheewle6kuhjdm7jaos6i",
+  "permits.json": "https://ipfs.filebase.io/ipfs/bafybeifoqcp3xzsslb6w2p2woklnr5tv5axsp2jgploqvlgpunrzxvpwqa",
+  "open_permits.json": "https://ipfs.filebase.io/ipfs/bafybeiakvuhkm6xqji3ijsvdw2emcno74rldb3sn3iwqtknuoyll5c4ikq",
   "tiles_index.json": GATEWAY + TILE_INDEX_CID,
   "manifest.json": `https://ipfs.filebase.io/ipfs/${PUBLISHED.manifest_cid}`,
 };
@@ -85,7 +85,7 @@ function renderSummary() {
       <p>Files: ${["summary.json", "leads.json", "permits.json", "open_permits.json", "tiles_index.json"].map((name) => `<a href="${IPFS[name]}" target="_blank" rel="noopener">${name}</a>`).join(" · ")}</p>
       ${manifest}
       ${checks ? `<details class="sources"><summary>Gateway readback checks</summary><ul>${checks}</ul></details>` : ""}
-      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
+      <p>Year built is filled for ${Number(s.with_year_built).toLocaleString()} parcels. Roof age otherwise uses the latest roof-permit year. Sale history was not submitted because www3.newcastlede.gov/robots.txt disallows /parcel/Details/. BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. Any-permit contractor is ${Number(s.with_any_permit_contractor).toLocaleString()} parcels whose latest permit of any type prints a name. Last roof contractor is ${Number(s.with_last_roof_contractor).toLocaleString()} parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor. ${Number(s.permit_rows_with_license_match ?? 0).toLocaleString()} of ${Number(s.permit_rows_with_contractor ?? 0).toLocaleString()} permit rows with a printed contractor name match a Delaware business contractor license name. This run's CAR, summary, and manifest matched on ipfs.filebase.io. ipfs.io, dweb.link, and gateway.pinata.cloud returned 429, so they are not counted as checks.</p>
     </div>`;
 }
 
@@ -103,14 +103,27 @@ function ageCell(lead) {
   return `<span class="age${lead.roof_age_years >= 30 ? " old" : ""}">${lead.roof_age_years}</span><span class="sub">${BASIS[lead.roof_age_basis] ?? ""}</span>`;
 }
 
-function contractorCell(name) {
-  return name ? `<span class="who">${escapeHtml(name)}</span>` : `<span class="none">Not printed on permit</span>`;
+const LICENSE_LABEL = {
+  "RESIDENT CONTRACTOR": "Delaware resident contractor",
+  "NON-RESIDENT CONTRACTOR": "non-resident contractor",
+  "CONSTRUCTION MANAGER": "construction manager",
+};
+
+function licenseSub(category, validTo, status) {
+  if (!status) return `<span class="sub">No name match on Delaware contractor licenses</span>`;
+  const label = LICENSE_LABEL[category] ?? "contractor license";
+  return `<span class="sub">Licensed name match · ${label}${validTo ? ` · valid to ${escapeHtml(validTo)}` : ""}</span>`;
+}
+
+function contractorCell(name, permit) {
+  if (!name) return `<span class="none">Not printed on permit</span>`;
+  return `<span class="who">${escapeHtml(name)}</span>${licenseSub(permit?.license_category, permit?.license_valid_to, permit?.license_status)}`;
 }
 
 function lastRoofCell(lead) {
   if (!lead?.last_roof_contractor_name) return `<span class="none">None on a closed roof permit</span>`;
   const year = String(lead.last_roof_contractor_issued_at || "").slice(0, 4);
-  return `<span class="who">${escapeHtml(lead.last_roof_contractor_name)}</span><span class="sub">Closed roof permit${year ? ` · ${year}` : ""}</span>`;
+  return `<span class="who">${escapeHtml(lead.last_roof_contractor_name)}</span><span class="sub">Closed roof permit${year ? ` · ${year}` : ""}</span>${licenseSub(lead.last_roof_license_category, lead.last_roof_license_valid_to, lead.last_roof_license_status)}`;
 }
 
 function openPermitFor(prclid, byParcel = state.byParcel) {
@@ -124,7 +137,7 @@ function rowHtml(lead) {
     <td><span class="addr">${escapeHtml(lead.address)}</span><span class="sub">${escapeHtml(lead.city)} · ${lead.distance_miles.toFixed(2)} mi · parcel ${lead.prclid}</span></td>
     <td>${ageCell(lead)}</td>
     <td>${permit ? `<span class="since">Open ${permit.days_open?.toLocaleString() ?? "?"} days</span><span class="sub">${permit.is_roof ? "Roof work" : escapeHtml(permit.aptype || "Other work")}${lead.open_permit_count > 1 ? ` · ${lead.open_permit_count} open` : ""}</span>` : `<span class="none">None open</span>`}</td>
-    <td>${permit ? contractorCell(permit.contractor_name) : `<span class="none">—</span>`}</td>
+    <td>${permit ? contractorCell(permit.contractor_name, permit) : `<span class="none">—</span>`}</td>
     <td>${lastRoofCell(lead)}</td>
     <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
   </tr>`;
@@ -215,13 +228,32 @@ function renderPermits() {
       <td><span class="addr">${escapeHtml(permit.address ?? permit.prclid)}</span><span class="sub">${escapeHtml(permit.city ?? "")} · parcel ${escapeHtml(permit.prclid)}</span></td>
       <td>${escapeHtml(permit.apno)}<span class="sub">${escapeHtml(permit.aptype ?? "")} · issued ${escapeHtml(permit.issued_on ?? "date not published")}</span></td>
       <td>${permit.is_roof ? `<span class="since">Roof</span> ` : ""}${escapeHtml(permit.comments ?? "")}</td>
-      <td>${contractorCell(permit.contractor_name)}</td>
+      <td>${contractorCell(permit.contractor_name, permit)}</td>
       <td><span class="none" title="bbb.org/robots.txt disallows category pages">Not loaded</span></td>
     </tr>`).join("");
   const roof = state.openPermits.filter((permit) => permit.is_roof).length;
   document.getElementById("permits").innerHTML = `<div class="toolbar"><p>${open.length.toLocaleString()} ${state.permitRoofOnly ? "open roof permits" : `open permits in the county, ${roof.toLocaleString()} of them for roof work`}, ${permitOrderPhrase()} · showing ${shown.toLocaleString()}. Every permit row is in <a href="${IPFS["permits.json"]}" target="_blank" rel="noopener">permits.json</a>.</p>
     <button type="button" class="btn tonal" data-roof-toggle>${state.permitRoofOnly ? "Show all open permits" : "Roof work only"}</button></div>
     <table><thead><tr>${permitHeader("Open", "days")}${permitHeader("Property", "property")}${permitHeader("Permit", "permit")}${permitHeader("Work", "work")}${permitHeader("Contractor on open permit", "contractor")}<th>BBB</th></tr></thead><tbody>${rows}</tbody></table>${moreButton(shown, open.length, "permits")}`;
+}
+
+function leadFacts(lead, permit) {
+  const facts = [];
+  if (lead.roof_age_years != null) {
+    facts.push(`roof about ${lead.roof_age_years} years old, from ${lead.roof_age_basis === "structure.year_built" ? "year built" : "the latest roof permit"}`);
+  } else {
+    facts.push("roof age unknown");
+  }
+  if (permit) {
+    facts.push(`${permit.is_roof ? "roof" : permit.aptype || "other"} permit open ${Number(permit.days_open ?? 0).toLocaleString()} days`);
+    if (permit.contractor_name) {
+      facts.push(`contractor on that permit ${permit.contractor_name}, ${permit.license_status ? `Delaware license name match, valid to ${permit.license_valid_to}` : "no Delaware license name match"}`);
+    }
+  }
+  if (lead.last_roof_contractor_name) {
+    facts.push(`last roof contractor ${lead.last_roof_contractor_name}, ${lead.last_roof_license_status ? `Delaware license name match, valid to ${lead.last_roof_license_valid_to}` : "no Delaware license name match"}`);
+  }
+  return facts;
 }
 
 async function answer(question) {
@@ -310,7 +342,7 @@ document.getElementById("search-form").addEventListener("submit", (event) => {
 
 const CITATIONS = [
   "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
-  "Delaware contractor business licenses were read through SODA dataset 5zy2-grhr. Electrical, plumbing, and HVACR licenses were read through SODA dataset pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name.",
+  "Contractor license fields are a name match to the Delaware business contractor licenses (SODA dataset 5zy2-grhr). A match means a licensed name exists. It does not confirm the permit contractor is that licensee. Electrical, plumbing, and HVACR trade licenses (pjnv-eaih) are issued to people, so they are not matched. HOMEOWNER PERMIT is not matched.",
   "Sale history is not available. www3.newcastlede.gov/robots.txt disallows /parcel/Details/, so a 10-year ownership question cannot be answered.",
   "The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the name on the latest closed or new-construction roof permit.",
 ];
@@ -342,11 +374,15 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
       roof_age_years: lead.roof_age_years,
       roof_age_basis: lead.roof_age_basis,
       permit: permit
-        ? { apno: permit.apno, issued_on: permit.issued_on, days_open: permit.days_open, is_roof: permit.is_roof, contractor_name: permit.contractor_name, aptype: permit.aptype, comments: permit.comments }
+        ? { apno: permit.apno, issued_on: permit.issued_on, days_open: permit.days_open, is_roof: permit.is_roof, contractor_name: permit.contractor_name, aptype: permit.aptype, comments: permit.comments, license_category: permit.license_category, license_status: permit.license_status, license_valid_to: permit.license_valid_to }
         : null,
       open_permit_count: lead.open_permit_count,
       last_roof_contractor_name: lead.last_roof_contractor_name,
       last_roof_contractor_basis: lead.last_roof_contractor_name ? "closed or new-construction roof permit, not the open permit" : null,
+      last_roof_license_category: lead.last_roof_license_category,
+      last_roof_license_status: lead.last_roof_license_status,
+      last_roof_license_valid_to: lead.last_roof_license_valid_to,
+      facts: leadFacts(lead, permit),
     };
   });
   const parcels = rows.map((lead) => `<li>${lead.address}, ${lead.city} · parcel ${lead.prclid}</li>`).join("");

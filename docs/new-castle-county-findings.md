@@ -22,7 +22,7 @@ Two pipeline runs are recorded. The second assembled 0 parcels.
 ## Query answers
 
 - Radius, roof age, open roof permits, and out-of-area owners are answered from `lead_property` and `permit_detail`.
-- Contractor name is the string on the permit. It is not a Delaware license match.
+- Contractor name is the string on the permit. `license_*` fields are an exact name match to the Delaware business contractor licenses (`5zy2-grhr`). A match shows that a licensed name exists. It does not confirm the permit contractor is that licensee.
 - BBB ratings are not loaded.
 - “No ownership change in 10 years” is not answered. The GIS layers have no sale date.
 
@@ -61,7 +61,7 @@ Each entry says what we tried, what the protocol allows, and whether a submissio
 - Business licenses, `5zy2-grhr`: 9,152 resident contractors, 4,943 non-resident contractors, 91 construction managers. Saved at `data/soda/business-contractors.json`.
 - Trade licenses, `pjnv-eaih`: 18,690 rows whose license type contains electrician, plumber, or HVAC. Saved at `data/soda/trade-licenses.json`.
 
-The lexicon manifest at `https://lexicon.elephant.xyz/api/manifest` has no `license` class. These rows are not written as a lexicon edge and are not matched to a permit name. Counts are in `data/soda/pull.json`.
+The lexicon manifest at `https://lexicon.elephant.xyz/api/manifest` has no `license` class, so these rows are not written as lexicon edges. They are matched to permit names in `pipeline/contractor_licenses.py`: an exact normalized name match to a business or trade name in the contractor categories. Trade licenses (`pjnv-eaih`) belong to people, so they are not matched. `HOMEOWNER PERMIT` is a placeholder and is never matched. Counts are in `data/soda/pull.json`.
 
 **Gridded parcel and permit layers (`gis.nccde.org`).** `robots.txt` returns 404, so there is no file to disallow. The feature services listed above were read through the ArcGIS REST protocol.
 

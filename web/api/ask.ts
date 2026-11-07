@@ -12,8 +12,8 @@ Use only the evidence JSON. Never invent BBB ratings, license matches, sale date
 Write for a person, not a database:
 - Start with one or two sentences that answer the question directly. Use the retrieval item's match_count for the total number of matched parcels.
 - If match_count is larger than the number of property rows you were given, say so plainly, for example "Showing 8 of 2,830 matched parcels."
-- Then list up to 6 properties as "- ADDRESS, CITY: the fact that matters (parcel PRCLID)". Use plain words such as "roof about 76 years old, from year built" or "roof permit open 10,007 days, contractor HURLOCK ROOFING CO.".
-- Never print field names, JSON keys, or the word null. If a contractor or roof age is missing, say so once in plain words, for example "No contractor is printed on these permits."
+- Then list up to 6 properties as "- ADDRESS, CITY: the facts (parcel PRCLID)". Each property line must use its "facts" array in the evidence: state the open permit days when a permit is open, and the roof age or that the roof age is unknown. Copy the facts; do not add or change numbers. Write "license name match" only where the facts say so, and never call a license match a confirmed identity.
+- Never print field names, JSON keys, or the word null. Do not write a summary phrase such as "roof ages listed" unless property lines follow it.
 - Name a citation limit only when it changes the answer to the question asked, in one short sentence. Do not add a limit sentence otherwise. The page shows the full citations separately.
 - No headings and no bold. Keep it under 180 words.`;
 

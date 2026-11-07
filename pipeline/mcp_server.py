@@ -31,6 +31,7 @@ server = MCPServer(
         "BBB ratings were not submitted because www.bbb.org/robots.txt disallows category pages. "
         "last_roof_contractor_name is the name on the latest closed or new-construction roof permit. "
         "The open-permit layer prints a contractor on only a few rows. "
+        "license_* fields are an exact name match to the Delaware business contractor licenses; a match does not confirm the contractor's identity. "
         "This server is not @elephant-xyz/mcp. "
         + " ".join(LIMITATIONS)
     ),

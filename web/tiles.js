@@ -1,5 +1,5 @@
 const GATEWAY = "https://ipfs.filebase.io/ipfs/";
-const TILE_INDEX_CID = "bafybeid5f3iy7inrdjbktnhydgcymuevopt2al3vrlmtcgnrgcgod5pahu";
+const TILE_INDEX_CID = "bafybeibrzouzxfoeeupdltsrfj6crr5ugf66r2vi6cyin7nvcgwui2u7s4";
 const tileCache = new Map();
 let tileIndex = null;
 

@@ -8,18 +8,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
 
+import contractor_licenses
+
 ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "data" / "duckdb" / "newcastle.duckdb"
+DB_PATH = Path(os.environ.get("NEW_CASTLE_DUCKDB", ROOT / "data" / "duckdb" / "newcastle.duckdb"))
 
 LIMITATIONS = [
     "Roof age is the structure year built when the county filled it. Otherwise it is the year of the latest roof-work permit: a replacement, re-roof, repair, tear-off, shingle, or sheathing job in the permit description. Porch roofs, patio covers, solar mounts, and later revision notes do not count. Parcels with neither have no roof age.",
     "Open duration is days since the issue timestamp on an open permit layer. The GIS layers do not publish a close date.",
-    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). Delaware contractor business licenses were read through SODA dataset 5zy2-grhr, and electrical, plumbing, and HVACR licenses through pjnv-eaih. The lexicon manifest has no license class, so those rows are not matched to a permit name. The open-permit layer prints a contractor on only a few rows, so open permits name a contractor only in the two rows where the county printed one. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
+    "Contractor name is the name printed on the permit (CONTNAME or CONTRACTORNAME). license_* fields come from a name match: the permit name, after case and punctuation normalization, equals a business or trade name on the Delaware business contractor licenses (SODA 5zy2-grhr: resident, non-resident, and construction manager). A match shows that a licensed name exists. It does not confirm that the permit contractor is that licensee or that the license class covers the permitted work. license_status is active when the license valid-to date is on or after the query date. Electrical, plumbing, and HVACR trade licenses (pjnv-eaih) belong to people, so they are not matched to company names. HOMEOWNER PERMIT is a placeholder and is never matched. The open-permit layer prints a contractor on only a few rows. last_roof_contractor_name is the contractor printed on the latest closed or new-construction roof permit for the parcel. It is not the contractor on an open permit.",
     "BBB ratings were not submitted. https://www.bbb.org/robots.txt disallows /*? and /business-reviews/*, so no BBB harvest was submitted.",
     "Ownership unchanged for 10 years cannot be answered. Sale and deed history are on www3.newcastlede.gov/parcel/Details/. That host's robots.txt is Disallow: / except listed search pages, so the Details path is disallowed. The page also serves a bot challenge, which this pipeline does not bypass. The GIS layers have no sale date.",
     "gis.nccde.org publishes no robots.txt. Parcel, structure, address, unit, permit, appeal, and rollback layers were read from that host.",
@@ -57,7 +61,7 @@ CREATE OR REPLACE MACRO roof_work(comments, aptype) AS (
   END
 );
 
-CREATE OR REPLACE VIEW permit_detail AS
+CREATE OR REPLACE VIEW permit_base AS
 SELECT
   prclid,
   source,
@@ -105,6 +109,26 @@ FROM (
   WHERE source LIKE 'permits_%' AND prclid IS NOT NULL
 ) AS p
 WHERE p.dup_rank = 1;
+"""
+
+# Runs after contractor_license_match exists, because permit_detail joins it.
+PERMIT_VIEWS_SQL = """
+CREATE OR REPLACE VIEW permit_detail AS
+SELECT
+  b.*,
+  m.license_name,
+  m.license_category,
+  m.license_valid_to,
+  CASE
+    WHEN m.license_valid_to IS NULL THEN NULL
+    WHEN m.license_valid_to >= current_date THEN 'active'
+    ELSE 'expired'
+  END AS license_status,
+  m.license_city,
+  m.license_state,
+  m.license_match_basis
+FROM permit_base AS b
+LEFT JOIN contractor_license_match AS m USING (contractor_name);
 
 CREATE OR REPLACE VIEW roof_rollup AS
 SELECT
@@ -160,6 +184,14 @@ SELECT
   r.last_roof_contractor_name,
   r.last_roof_contractor_issued_at,
   'name printed on a closed or new-construction roof permit; not an open-permit contractor' AS last_roof_contractor_basis,
+  lr.license_category AS last_roof_license_category,
+  lr.license_valid_to AS last_roof_license_valid_to,
+  CASE
+    WHEN lr.license_valid_to IS NULL THEN NULL
+    WHEN lr.license_valid_to >= current_date THEN 'active'
+    ELSE 'expired'
+  END AS last_roof_license_status,
+  lr.license_match_basis AS last_roof_license_match_basis,
   CAST(NULL AS VARCHAR) AS bbb_rating,
   'not loaded' AS bbb_basis,
   CAST(NULL AS BOOLEAN) AS ownership_unchanged_10_years,
@@ -168,7 +200,8 @@ SELECT
   b.assembled_at,
   b.run_id
 FROM parcel AS b
-LEFT JOIN roof_rollup AS r USING (prclid);
+LEFT JOIN roof_rollup AS r USING (prclid)
+LEFT JOIN contractor_license_match AS lr ON lr.contractor_name = r.last_roof_contractor_name;
 """
 
 
@@ -176,10 +209,14 @@ def connect(read_only: bool = False) -> duckdb.DuckDBPyConnection:
     return duckdb.connect(str(DB_PATH), read_only=read_only)
 
 
-def install() -> None:
+def install() -> dict:
+    """Create the views. The license match table is rebuilt from the permit names in between."""
     connection = connect()
     connection.execute(INSTALL_SQL)
+    license_summary = contractor_licenses.install(connection)
+    connection.execute(PERMIT_VIEWS_SQL)
     connection.close()
+    return license_summary
 
 
 def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
@@ -188,8 +225,10 @@ def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
     for record in cursor.fetchall():
         row = {}
         for name, value in zip(columns, record):
-            if hasattr(value, "isoformat"):
+            if isinstance(value, datetime):
                 value = value.isoformat(sep=" ", timespec="seconds")
+            elif isinstance(value, date):
+                value = value.isoformat()
             row[name] = value
         rows.append(row)
     return rows
@@ -213,11 +252,24 @@ def source_summary() -> dict:
               count(*) FILTER (WHERE open_roof_permit_count > 0) AS open_roof_permit,
               count(*) FILTER (WHERE owner_out_of_area) AS out_of_area_owner,
               count(*) FILTER (WHERE contractor_name IS NOT NULL) AS with_any_permit_contractor,
-              count(*) FILTER (WHERE last_roof_contractor_name IS NOT NULL) AS with_last_roof_contractor
+              count(*) FILTER (WHERE last_roof_contractor_name IS NOT NULL) AS with_last_roof_contractor,
+              count(*) FILTER (WHERE last_roof_license_status IS NOT NULL) AS with_last_roof_license_match,
+              count(*) FILTER (WHERE last_roof_license_status = 'active') AS with_last_roof_license_active
             FROM lead_property
             """
         )
     )
+    permit_license = _rows(
+        connection.execute(
+            """
+            SELECT
+              count(*) FILTER (WHERE contractor_name IS NOT NULL) AS permit_rows_with_contractor,
+              count(*) FILTER (WHERE license_status IS NOT NULL) AS permit_rows_with_license_match,
+              count(*) FILTER (WHERE license_status = 'active') AS permit_rows_with_license_active
+            FROM permit_detail
+            """
+        )
+    )[0]
     sources = _rows(
         connection.execute(
             "SELECT source, row_count, finished_at FROM county_record_marker ORDER BY source"
@@ -234,6 +286,13 @@ def source_summary() -> dict:
     )
     connection.close()
     row = coverage[0] if coverage else {}
+    row.update(permit_license)
+    row["license_match_note"] = (
+        "permit_rows_with_license_match counts permit rows whose printed contractor name exactly matches "
+        "a Delaware business contractor license name. It is a name match, not an identity check. "
+        "with_last_roof_license_active counts parcels whose last roof contractor matches a license "
+        "valid on the query date."
+    )
     row["contractor_count_note"] = (
         "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. "
         "with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, "
@@ -454,7 +513,8 @@ def export(directory: Path) -> dict:
                    oldest_open_roof_days,
                    date_diff('day', oldest_open_permit_issued_at, current_timestamp) AS oldest_open_days,
                    contractor_name, owner_out_of_area,
-                   last_roof_contractor_name, last_roof_contractor_issued_at
+                   last_roof_contractor_name, last_roof_contractor_issued_at,
+                   last_roof_license_status, last_roof_license_category, last_roof_license_valid_to
             FROM lead_property
             WHERE lat IS NOT NULL
             ORDER BY prclid
@@ -465,7 +525,8 @@ def export(directory: Path) -> dict:
         connection.execute(
             """
             SELECT prclid, apno, aptype, permit_status, issued_at, days_open, is_roof,
-                   comments, contractor_name
+                   comments, contractor_name, license_name, license_category, license_status,
+                   license_valid_to
             FROM permit_detail
             ORDER BY issued_at DESC NULLS LAST, apno
             """
@@ -476,7 +537,8 @@ def export(directory: Path) -> dict:
             """
             SELECT p.prclid, l.address, l.city, l.lat, l.lon, p.apno, p.aptype,
                    CAST(CAST(p.issued_at AS DATE) AS VARCHAR) AS issued_on, p.days_open, p.is_roof,
-                   p.comments, p.contractor_name
+                   p.comments, p.contractor_name, p.license_name, p.license_category,
+                   p.license_status, p.license_valid_to
             FROM permit_detail p
             LEFT JOIN lead_property l USING (prclid)
             WHERE p.permit_status = 'open'
@@ -512,11 +574,13 @@ LEAD_COLUMNS = [
     "prclid", "address", "city", "zip", "lat", "lon", "roof_age_years", "roof_age_basis",
     "year_built", "open_permit_count", "open_roof_permit_count", "newest_open_days",
     "oldest_open_days", "contractor_name", "owner_out_of_area", "last_roof_contractor_name",
-    "last_roof_contractor_issued_at",
+    "last_roof_contractor_issued_at", "last_roof_license_status", "last_roof_license_category",
+    "last_roof_license_valid_to",
 ]
 PERMIT_COLUMNS = [
     "prclid", "apno", "aptype", "permit_status", "issued_on", "days_open", "is_roof",
-    "comments", "contractor_name",
+    "comments", "contractor_name", "license_name", "license_category", "license_status",
+    "license_valid_to",
 ]
 
 
@@ -540,7 +604,9 @@ def export_tiles(connection: duckdb.DuckDBPyConnection, directory: Path) -> dict
                round(l.lat, 6), round(l.lon, 6), l.roof_age_years, l.roof_age_basis,
                l.year_built, l.open_permit_count, l.open_roof_permit_count,
                o.newest_open_days, o.oldest_open_days, l.contractor_name, l.owner_out_of_area,
-               l.last_roof_contractor_name, CAST(l.last_roof_contractor_issued_at AS DATE)
+               l.last_roof_contractor_name, CAST(l.last_roof_contractor_issued_at AS DATE),
+               l.last_roof_license_status, l.last_roof_license_category,
+               CAST(l.last_roof_license_valid_to AS DATE)
         FROM lead_property l
         LEFT JOIN open_age o USING (prclid)
         WHERE l.lat IS NOT NULL
@@ -551,7 +617,8 @@ def export_tiles(connection: duckdb.DuckDBPyConnection, directory: Path) -> dict
         f"""
         SELECT {TILE_KEY_SQL} AS tile,
                p.prclid, p.apno, p.aptype, p.permit_status, CAST(p.issued_at AS DATE),
-               p.days_open, p.is_roof, p.comments, p.contractor_name
+               p.days_open, p.is_roof, p.comments, p.contractor_name, p.license_name,
+               p.license_category, p.license_status, CAST(p.license_valid_to AS DATE)
         FROM permit_detail p
         JOIN lead_property l USING (prclid)
         WHERE l.lat IS NOT NULL AND (p.permit_status = 'open' OR p.is_roof)
@@ -609,8 +676,11 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "install":
-        install()
-        print("installed lead_property, permit_detail, roof_rollup, miles_between, roof_work")
+        license_summary = install()
+        print(
+            "installed lead_property, permit_detail, roof_rollup, miles_between, roof_work, "
+            f"contractor_license_match {json.dumps(license_summary)}"
+        )
         return
     install()
     if args.command == "summary":

@@ -2,7 +2,7 @@
 
 Hosted query page: https://newcastle-oracle-adamkalamchi-3665s-projects.vercel.app
 
-The page loads the full published set: 203,855 parcels with coordinates and 461,258 permit rows. Manifest CID `bafybeidczn47arvja7lf5pxac75wa6a3j3u65txa6d4jaoejg6b34cetoe`. It follows prior manifest `bafybeifxiwxgcuetw3ahmpeq6nf5gklyl77m7q2xnyae3uu5cddsi4sedm`. The summary and the manifest matched on `ipfs.filebase.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429.
+The page loads the full published set: 203,855 parcels with coordinates and 461,258 permit rows. Manifest CID `bafybeidzd6xhwrkmt6jwj5n2w4rsnd7355mjnnipysg6cmlipkpxuujvve`. It follows prior manifest `bafybeigzaxey4agd4ble5b555vrcckx7hh3ny4zuiiizijp2r3xpkklshm`. The summary and the manifest matched on `ipfs.filebase.io`. The CAR matched on `ipfs.filebase.io` and `gateway.pinata.cloud`. `ipfs.io` and `dweb.link` returned 429.
 
 ## Context
 
