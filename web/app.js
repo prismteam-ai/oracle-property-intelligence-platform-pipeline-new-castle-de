@@ -510,10 +510,20 @@ document.getElementById("question").addEventListener("keydown", (event) => {
   }
 });
 
-Promise.all([loadJson("summary.json"), loadTileIndex(), loadJson("manifest.json").catch(() => null)])
-  .then(([summary, _index, manifest]) => {
+Promise.all([
+  loadJson("summary.json"),
+  loadTileIndex(),
+  loadJson("manifest.json").catch(() => null),
+  fetch("/data/published.json").then((response) => (response.ok ? response.json() : null)).catch(() => null),
+])
+  .then(([summary, _index, manifest, record]) => {
     state.summary = summary;
-    state.published = { manifest_cid: PUBLISHED.manifest_cid, delta_cid: PUBLISHED.delta_cid, manifest, gateway_checks: [] };
+    state.published = {
+      manifest_cid: PUBLISHED.manifest_cid,
+      delta_cid: PUBLISHED.delta_cid,
+      manifest,
+      gateway_checks: record?.gateway_checks || [],
+    };
     const totals = tileTotals();
     document.getElementById("status").textContent = `${totals.parcels.toLocaleString()} parcels · published on IPFS`;
     renderSummary();
