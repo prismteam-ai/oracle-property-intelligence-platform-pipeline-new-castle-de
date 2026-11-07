@@ -1,0 +1,377 @@
+{
+  "tile_degrees": 0.05,
+  "lead_columns": [
+    "prclid",
+    "address",
+    "city",
+    "zip",
+    "lat",
+    "lon",
+    "roof_age_years",
+    "roof_age_basis",
+    "year_built",
+    "open_permit_count",
+    "open_roof_permit_count",
+    "newest_open_days",
+    "oldest_open_days",
+    "contractor_name",
+    "owner_out_of_area",
+    "last_roof_contractor_name",
+    "last_roof_contractor_issued_at",
+    "last_roof_license_status",
+    "last_roof_license_category",
+    "last_roof_license_valid_to"
+  ],
+  "permit_columns": [
+    "prclid",
+    "apno",
+    "aptype",
+    "permit_status",
+    "issued_on",
+    "days_open",
+    "is_roof",
+    "comments",
+    "contractor_name",
+    "license_name",
+    "license_category",
+    "license_status",
+    "license_valid_to"
+  ],
+  "tiles": {
+    "785_-1513": {
+      "file": "785_-1513.json",
+      "parcels": 1,
+      "permits": 0
+    },
+    "785_-1514": {
+      "file": "785_-1514.json",
+      "parcels": 71,
+      "permits": 9
+    },
+    "785_-1515": {
+      "file": "785_-1515.json",
+      "parcels": 11,
+      "permits": 0
+    },
+    "785_-1516": {
+      "file": "785_-1516.json",
+      "parcels": 9,
+      "permits": 1
+    },
+    "786_-1512": {
+      "file": "786_-1512.json",
+      "parcels": 63,
+      "permits": 11
+    },
+    "786_-1513": {
+      "file": "786_-1513.json",
+      "parcels": 679,
+      "permits": 69
+    },
+    "786_-1514": {
+      "file": "786_-1514.json",
+      "parcels": 386,
+      "permits": 43
+    },
+    "786_-1515": {
+      "file": "786_-1515.json",
+      "parcels": 311,
+      "permits": 46
+    },
+    "786_-1516": {
+      "file": "786_-1516.json",
+      "parcels": 60,
+      "permits": 1
+    },
+    "787_-1511": {
+      "file": "787_-1511.json",
+      "parcels": 22,
+      "permits": 3
+    },
+    "787_-1512": {
+      "file": "787_-1512.json",
+      "parcels": 110,
+      "permits": 2
+    },
+    "787_-1513": {
+      "file": "787_-1513.json",
+      "parcels": 389,
+      "permits": 52
+    },
+    "787_-1514": {
+      "file": "787_-1514.json",
+      "parcels": 1425,
+      "permits": 361
+    },
+    "787_-1515": {
+      "file": "787_-1515.json",
+      "parcels": 965,
+      "permits": 264
+    },
+    "787_-1516": {
+      "file": "787_-1516.json",
+      "parcels": 89,
+      "permits": 11
+    },
+    "788_-1512": {
+      "file": "788_-1512.json",
+      "parcels": 34,
+      "permits": 0
+    },
+    "788_-1513": {
+      "file": "788_-1513.json",
+      "parcels": 2364,
+      "permits": 249
+    },
+    "788_-1514": {
+      "file": "788_-1514.json",
+      "parcels": 2219,
+      "permits": 312
+    },
+    "788_-1515": {
+      "file": "788_-1515.json",
+      "parcels": 4278,
+      "permits": 97
+    },
+    "788_-1516": {
+      "file": "788_-1516.json",
+      "parcels": 81,
+      "permits": 12
+    },
+    "789_-1511": {
+      "file": "789_-1511.json",
+      "parcels": 2,
+      "permits": 0
+    },
+    "789_-1512": {
+      "file": "789_-1512.json",
+      "parcels": 68,
+      "permits": 10
+    },
+    "789_-1513": {
+      "file": "789_-1513.json",
+      "parcels": 2349,
+      "permits": 194
+    },
+    "789_-1514": {
+      "file": "789_-1514.json",
+      "parcels": 4000,
+      "permits": 411
+    },
+    "789_-1515": {
+      "file": "789_-1515.json",
+      "parcels": 4546,
+      "permits": 129
+    },
+    "789_-1516": {
+      "file": "789_-1516.json",
+      "parcels": 755,
+      "permits": 124
+    },
+    "790_-1512": {
+      "file": "790_-1512.json",
+      "parcels": 254,
+      "permits": 18
+    },
+    "790_-1513": {
+      "file": "790_-1513.json",
+      "parcels": 950,
+      "permits": 175
+    },
+    "790_-1514": {
+      "file": "790_-1514.json",
+      "parcels": 5432,
+      "permits": 796
+    },
+    "790_-1515": {
+      "file": "790_-1515.json",
+      "parcels": 1675,
+      "permits": 250
+    },
+    "790_-1516": {
+      "file": "790_-1516.json",
+      "parcels": 1408,
+      "permits": 223
+    },
+    "791_-1512": {
+      "file": "791_-1512.json",
+      "parcels": 935,
+      "permits": 107
+    },
+    "791_-1513": {
+      "file": "791_-1513.json",
+      "parcels": 498,
+      "permits": 49
+    },
+    "791_-1514": {
+      "file": "791_-1514.json",
+      "parcels": 3266,
+      "permits": 580
+    },
+    "791_-1515": {
+      "file": "791_-1515.json",
+      "parcels": 4388,
+      "permits": 759
+    },
+    "791_-1516": {
+      "file": "791_-1516.json",
+      "parcels": 1889,
+      "permits": 297
+    },
+    "792_-1512": {
+      "file": "792_-1512.json",
+      "parcels": 45,
+      "permits": 12
+    },
+    "792_-1513": {
+      "file": "792_-1513.json",
+      "parcels": 3602,
+      "permits": 548
+    },
+    "792_-1514": {
+      "file": "792_-1514.json",
+      "parcels": 10489,
+      "permits": 761
+    },
+    "792_-1515": {
+      "file": "792_-1515.json",
+      "parcels": 4842,
+      "permits": 664
+    },
+    "792_-1516": {
+      "file": "792_-1516.json",
+      "parcels": 3640,
+      "permits": 568
+    },
+    "793_-1511": {
+      "file": "793_-1511.json",
+      "parcels": 271,
+      "permits": 24
+    },
+    "793_-1512": {
+      "file": "793_-1512.json",
+      "parcels": 8664,
+      "permits": 666
+    },
+    "793_-1513": {
+      "file": "793_-1513.json",
+      "parcels": 5485,
+      "permits": 492
+    },
+    "793_-1514": {
+      "file": "793_-1514.json",
+      "parcels": 6141,
+      "permits": 749
+    },
+    "793_-1515": {
+      "file": "793_-1515.json",
+      "parcels": 8222,
+      "permits": 500
+    },
+    "793_-1516": {
+      "file": "793_-1516.json",
+      "parcels": 5580,
+      "permits": 74
+    },
+    "794_-1511": {
+      "file": "794_-1511.json",
+      "parcels": 5763,
+      "permits": 116
+    },
+    "794_-1512": {
+      "file": "794_-1512.json",
+      "parcels": 16994,
+      "permits": 486
+    },
+    "794_-1513": {
+      "file": "794_-1513.json",
+      "parcels": 10073,
+      "permits": 654
+    },
+    "794_-1514": {
+      "file": "794_-1514.json",
+      "parcels": 8498,
+      "permits": 735
+    },
+    "794_-1515": {
+      "file": "794_-1515.json",
+      "parcels": 4680,
+      "permits": 249
+    },
+    "794_-1516": {
+      "file": "794_-1516.json",
+      "parcels": 642,
+      "permits": 52
+    },
+    "795_-1510": {
+      "file": "795_-1510.json",
+      "parcels": 5306,
+      "permits": 438
+    },
+    "795_-1511": {
+      "file": "795_-1511.json",
+      "parcels": 15018,
+      "permits": 752
+    },
+    "795_-1512": {
+      "file": "795_-1512.json",
+      "parcels": 6799,
+      "permits": 420
+    },
+    "795_-1513": {
+      "file": "795_-1513.json",
+      "parcels": 2268,
+      "permits": 536
+    },
+    "795_-1514": {
+      "file": "795_-1514.json",
+      "parcels": 5738,
+      "permits": 615
+    },
+    "795_-1515": {
+      "file": "795_-1515.json",
+      "parcels": 4032,
+      "permits": 548
+    },
+    "795_-1516": {
+      "file": "795_-1516.json",
+      "parcels": 89,
+      "permits": 11
+    },
+    "796_-1509": {
+      "file": "796_-1509.json",
+      "parcels": 264,
+      "permits": 37
+    },
+    "796_-1510": {
+      "file": "796_-1510.json",
+      "parcels": 5815,
+      "permits": 546
+    },
+    "796_-1511": {
+      "file": "796_-1511.json",
+      "parcels": 6922,
+      "permits": 780
+    },
+    "796_-1512": {
+      "file": "796_-1512.json",
+      "parcels": 684,
+      "permits": 78
+    },
+    "796_-1513": {
+      "file": "796_-1513.json",
+      "parcels": 760,
+      "permits": 185
+    },
+    "796_-1514": {
+      "file": "796_-1514.json",
+      "parcels": 520,
+      "permits": 46
+    },
+    "796_-1515": {
+      "file": "796_-1515.json",
+      "parcels": 27,
+      "permits": 0
+    }
+  }
+}
