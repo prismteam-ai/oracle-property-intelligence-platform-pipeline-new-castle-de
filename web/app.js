@@ -395,7 +395,7 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
       body: JSON.stringify({
         question,
         evidence: [
-          { source: "retrieval", city: result.city, radius_miles: result.radius, match_count: result.leads.length },
+          { source: "retrieval", city: result.city, radius_miles: result.radius, match_count: result.leads.length, shown_count: rows.length },
           ...rows,
           ...CITATIONS.map((text) => ({ source: "citation", text })),
         ],
