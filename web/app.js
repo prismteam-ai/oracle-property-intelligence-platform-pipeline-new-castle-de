@@ -14,6 +14,8 @@ const BASIS = {
 };
 
 const PAGE = 200;
+// Ask writes one line per property, so the answer lists up to this many matches.
+const ASK_LINES = 50;
 const state = {
   leads: [], byParcel: new Map(), openPermits: [], summary: null, published: null, map: null, layer: null,
   results: [], resultLimit: PAGE, permitLimit: PAGE, permitRoofOnly: false, permitSort: { key: null, dir: -1 }, runId: 0,
@@ -427,7 +429,7 @@ document.getElementById("ask-form").addEventListener("submit", async (event) => 
     send.disabled = false;
     return;
   }
-  const rows = result.leads.slice(0, 8).map((lead) => {
+  const rows = result.leads.slice(0, ASK_LINES).map((lead) => {
     const permit = openPermitFor(lead.prclid, result.byParcel);
     return {
       source: "published-lead",
