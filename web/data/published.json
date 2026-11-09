@@ -307,5 +307,31 @@
       "match": false,
       "name": "20261107T195946Z/manifest.json"
     }
+  ],
+  "second_pins": [
+    {
+      "provider": "pinata",
+      "name": "20261107T195946Z/summary.json",
+      "cid": "bafybeicgtyxrgnidgxi3pmsice6iyn5jbos5mgd3bb42wsiifli6wosf74",
+      "sha256": "f309c7f66a539a1dcc7befbc3ead132ef0eb09c6c7844f9f5eaad1c7e9e03230",
+      "pinned": true,
+      "returned_cid": "bafkreihtbhd7m2sttio4y67pxq7k2ezo6dvqtrwhqrhz6xvk2hd6tybsga",
+      "cid_match": false,
+      "readback_sha256": "f309c7f66a539a1dcc7befbc3ead132ef0eb09c6c7844f9f5eaad1c7e9e03230",
+      "readback_match": true,
+      "error": null
+    },
+    {
+      "provider": "pinata",
+      "name": "20261107T195946Z/manifest.json",
+      "cid": "bafybeidtxmv2n6ihzalg4wbvcbk2aimuwi57bhiorjag6ctznopihajbh4",
+      "sha256": "9824fafa8c44b7ab03b54d4f99ea9c1dca52821df393e1b701b28e79cb9e9e5a",
+      "pinned": true,
+      "returned_cid": "bafkreieyet5pvdcew6vqhnknj6m6vha5zjjiehptspq3oansrz44xhu6li",
+      "cid_match": false,
+      "readback_sha256": "9824fafa8c44b7ab03b54d4f99ea9c1dca52821df393e1b701b28e79cb9e9e5a",
+      "readback_match": true,
+      "error": null
+    }
   ]
 }
