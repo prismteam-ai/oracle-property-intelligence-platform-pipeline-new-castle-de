@@ -1,0 +1,8 @@
+{
+  "from": {
+    "/": "./unnormalized_address.json"
+  },
+  "to": {
+    "/": "./parcel.json"
+  }
+}

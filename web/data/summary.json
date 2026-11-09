@@ -1,0 +1,18 @@
+{
+  "parcels": 203882,
+  "with_coordinates": 203855,
+  "with_year_built": 4432,
+  "roofs_15_or_older": 4818,
+  "any_open_permit": 10735,
+  "open_roof_permit": 114,
+  "out_of_area_owner": 10542,
+  "with_any_permit_contractor": 113046,
+  "with_last_roof_contractor": 2442,
+  "with_last_roof_license_match": 682,
+  "with_last_roof_license_active": 682,
+  "permit_rows_with_contractor": 404649,
+  "permit_rows_with_license_match": 164008,
+  "permit_rows_with_license_active": 164008,
+  "license_match_note": "permit_rows_with_license_match counts permit rows whose printed contractor name exactly matches a Delaware business contractor license name. It is a name match, not an identity check. with_last_roof_license_active counts parcels whose last roof contractor matches a license valid on the query date.",
+  "contractor_count_note": "with_any_permit_contractor counts parcels whose latest permit of any type prints a name. with_last_roof_contractor counts parcels whose latest roof-work permit prints a name, from the closed and new-construction layers. The open-permit layer prints a contractor on only a few rows, so neither count is an open-permit contractor."
+}
