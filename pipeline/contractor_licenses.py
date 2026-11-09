@@ -13,6 +13,7 @@ licensee, or that the license class covers the permitted work.
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import defaultdict
 from datetime import date
@@ -21,6 +22,12 @@ from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 LICENSE_PATH = ROOT / "data" / "soda" / "business-contractors.json"
+
+
+def license_path() -> Path:
+    """The SODA license file. NEW_CASTLE_LICENSES overrides it, so tests can supply a fixture."""
+    override = os.environ.get("NEW_CASTLE_LICENSES")
+    return Path(override) if override else LICENSE_PATH
 SOURCE = "Delaware Business Licenses, SODA 5zy2-grhr (contractor categories)"
 CONTRACTOR_CATEGORIES = {"RESIDENT CONTRACTOR", "NON-RESIDENT CONTRACTOR", "CONSTRUCTION MANAGER"}
 
@@ -64,8 +71,8 @@ def _is_active(record: dict, today: date) -> bool:
     return valid_to is not None and valid_to >= today
 
 
-def load_licenses(path: Path = LICENSE_PATH) -> list[dict]:
-    records = json.loads(path.read_text())
+def load_licenses(path: Path | None = None) -> list[dict]:
+    records = json.loads((path or license_path()).read_text())
     return [r for r in records if r.get("category") in CONTRACTOR_CATEGORIES]
 
 
@@ -122,7 +129,7 @@ def build_matches(
     return rows
 
 
-def install(connection, path: Path = LICENSE_PATH, today: date | None = None) -> dict:
+def install(connection, path: Path | None = None, today: date | None = None) -> dict:
     """Rebuild contractor_license_match from the distinct permit contractor names in the database."""
     names = [
         row[0]

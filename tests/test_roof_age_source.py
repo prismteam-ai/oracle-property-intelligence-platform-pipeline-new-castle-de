@@ -4,7 +4,11 @@ import load_sources
 import query_layer
 
 
-def test_roof_age_uses_a_closed_permit_and_not_an_open_one(tmp_path):
+def test_roof_age_uses_a_closed_permit_and_not_an_open_one(tmp_path, monkeypatch):
+    # CI has no SODA download, so the license file is an empty fixture here.
+    licenses = tmp_path / "licenses.json"
+    licenses.write_text("[]")
+    monkeypatch.setenv("NEW_CASTLE_LICENSES", str(licenses))
     path = tmp_path / "roof.duckdb"
     previous = query_layer.DB_PATH
     query_layer.DB_PATH = path
